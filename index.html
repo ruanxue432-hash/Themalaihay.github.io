@@ -3,42 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Roblox 3D - Di Chuyển & Xoay Camera 360</title>
+    <title>Roblox 3D - Joystick, Nhảy & Chạy Nhanh</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: Arial, sans-serif; touch-action: none; }
         
-        /* Giao diện nút D-Pad di chuyển */
-        #controls {
+        /* Joystick Cần Kéo (Góc dưới bên trái) */
+        #joystick-zone {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 150px;
-            height: 150px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        #joystick-stick {
+            width: 50px;
+            height: 50px;
+            background: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+            transform: translate(0px, 0px);
+        }
+
+        /* Nút Hành Động (Góc dưới bên phải) */
+        #action-buttons {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            gap: 15px;
             z-index: 10;
         }
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
+        .action-btn {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 10px;
             color: white;
-            font-size: 20px;
             font-weight: bold;
+            font-size: 13px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(4px);
         }
-        .btn:active { background: #38bdf8; color: #000; }
-        #btn-up { grid-column: 2; grid-row: 1; }
-        #btn-left { grid-column: 1; grid-row: 2; }
-        #btn-down { grid-column: 2; grid-row: 3; }
-        #btn-right { grid-column: 3; grid-row: 2; }
+        #btn-jump { background: rgba(34, 197, 94, 0.4); }
+        #btn-jump:active { background: #22c55e; }
+        #btn-sprint { background: rgba(234, 179, 8, 0.4); }
+        #btn-sprint.active { background: #eab308; color: #000; }
 
         #info {
             position: absolute;
@@ -57,16 +78,19 @@
 <body>
 
     <div id="info">
-        🎮 <b>Di chuyển:</b> D-Pad hoặc WASD / Mũi tên<br>
-        🔄 <b>Xoay màn hình:</b> Vuốt màn hình / Kéo giữ chuột trái
+        🕹️ <b>Kéo Cần:</b> Di chuyển | 🔄 <b>Vuốt Phải:</b> Xoay camera<br>
+        🦘 <b>JUMP:</b> Nhảy | ⚡ <b>SPRINT:</b> Giữ chạy nhanh
     </div>
 
-    <!-- D-Pad Controls -->
-    <div id="controls">
-        <div class="btn" id="btn-up">▲</div>
-        <div class="btn" id="btn-left">◀</div>
-        <div class="btn" id="btn-down">▼</div>
-        <div class="btn" id="btn-right">▶</div>
+    <!-- Joystick Zone -->
+    <div id="joystick-zone">
+        <div id="joystick-stick"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons">
+        <div class="action-btn" id="btn-sprint">⚡ SPRINT</div>
+        <div class="action-btn" id="btn-jump">▲ JUMP</div>
     </div>
 
     <!-- Three.js CDN -->
@@ -94,14 +118,14 @@
         scene.add(dirLight);
 
         // Sàn đấu (Grid)
-        const gridHelper = new THREE.GridHelper(40, 40, 0x38bdf8, 0x334155);
+        const gridHelper = new THREE.GridHelper(50, 50, 0x38bdf8, 0x334155);
         scene.add(gridHelper);
 
-        // 2. Tạo nhân vật Roblox
+        // 2. Tạo Nhân Vật Roblox
         function createRobloxCharacter(colorHex) {
             const charGroup = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: colorHex });
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 }); // Đầu vàng
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 });
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat);
             torso.position.y = 2.5;
@@ -140,129 +164,199 @@
         p2.group.position.set(4, 0, -3);
         scene.add(p2.group);
 
-        // 3. Cơ chế Xoay Màn Hình (Orbit Angles)
-        let camYaw = 0;          // Góc xoay ngang (trái/phải)
-        let camPitch = 0.3;      // Góc xoay dọc (lên/xuống)
-        const camDistance = 12;  // Khoảng cách camera tới nhân vật
+        // 3. Cơ chế Xoay Màn Hình (Camera Orbit)
+        let camYaw = 0;
+        let camPitch = 0.3;
+        const camDistance = 12;
 
-        let isDragging = false;
-        let previousTouchX = 0;
-        let previousTouchY = 0;
+        let isCamDragging = false;
+        let prevTouchX = 0, prevTouchY = 0;
 
-        // Xoay bằng Chuột
-        window.addEventListener('mousedown', (e) => {
-            if (e.target.closest('#controls')) return; // Không xoay khi bấm nút D-Pad
-            isDragging = true;
-            previousTouchX = e.clientX;
-            previousTouchY = e.clientY;
-        });
+        // 4. Cơ chế Joystick Kéo Cảm Ứng
+        const zone = document.getElementById('joystick-zone');
+        const stick = document.getElementById('joystick-stick');
+        let joyVector = { x: 0, y: 0 };
+        let joyActive = false;
+        let joyTouchId = null;
 
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - previousTouchX;
-            const deltaY = e.clientY - previousTouchY;
+        const maxRadius = 45;
 
-            camYaw -= deltaX * 0.005;
-            camPitch += deltaY * 0.005;
-            camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch)); // Giới hạn góc nhìn dọc
+        function handleJoyMove(clientX, clientY) {
+            const rect = zone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
 
-            previousTouchX = e.clientX;
-            previousTouchY = e.clientY;
-        });
+            let deltaX = clientX - centerX;
+            let deltaY = clientY - centerY;
+            let dist = Math.hypot(deltaX, deltaY);
 
-        window.addEventListener('mouseup', () => isDragging = false);
+            if (dist > maxRadius) {
+                deltaX = (deltaX / dist) * maxRadius;
+                deltaY = (deltaY / dist) * maxRadius;
+            }
 
-        // Xoay bằng Cảm Ứng (Điện thoại)
+            stick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            joyVector.x = deltaX / maxRadius;
+            joyVector.y = deltaY / maxRadius;
+        }
+
+        function resetJoy() {
+            stick.style.transform = `translate(0px, 0px)`;
+            joyVector = { x: 0, y: 0 };
+            joyActive = false;
+            joyTouchId = null;
+        }
+
+        // Bắt sự kiện Joystick & Camera
         window.addEventListener('touchstart', (e) => {
-            if (e.target.closest('#controls')) return;
-            if (e.touches.length === 1) {
-                isDragging = true;
-                previousTouchX = e.touches[0].clientX;
-                previousTouchY = e.touches[0].clientY;
+            for (let touch of e.changedTouches) {
+                const targetBtn = touch.target.closest('.action-btn');
+                const targetJoy = touch.target.closest('#joystick-zone');
+
+                if (targetJoy && joyTouchId === null) {
+                    joyActive = true;
+                    joyTouchId = touch.identifier;
+                    handleJoyMove(touch.clientX, touch.clientY);
+                } else if (!targetBtn && !targetJoy) {
+                    isCamDragging = true;
+                    prevTouchX = touch.clientX;
+                    prevTouchY = touch.clientY;
+                }
             }
         });
 
         window.addEventListener('touchmove', (e) => {
-            if (!isDragging || e.touches.length !== 1) return;
-            const deltaX = e.touches[0].clientX - previousTouchX;
-            const deltaY = e.touches[0].clientY - previousTouchY;
-
-            camYaw -= deltaX * 0.005;
-            camPitch += deltaY * 0.005;
-            camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch));
-
-            previousTouchX = e.touches[0].clientX;
-            previousTouchY = e.touches[0].clientY;
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === joyTouchId) {
+                    handleJoyMove(touch.clientX, touch.clientY);
+                } else if (isCamDragging) {
+                    let dX = touch.clientX - prevTouchX;
+                    let dY = touch.clientY - prevTouchY;
+                    camYaw -= dX * 0.005;
+                    camPitch += dY * 0.005;
+                    camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch));
+                    prevTouchX = touch.clientX;
+                    prevTouchY = touch.clientY;
+                }
+            }
         });
 
-        window.addEventListener('touchend', () => isDragging = false);
-
-        // 4. Di chuyển Nhân vật
-        const keys = { forward: false, backward: false, left: false, right: false };
-        const speed = 0.15;
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = true;
-            if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = true;
-            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
-            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+        window.addEventListener('touchend', (e) => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === joyTouchId) resetJoy();
+            }
+            if (e.touches.length === 0) isCamDragging = false;
         });
 
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = false;
-            if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = false;
-            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
-            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+        // Chuột máy tính hỗ trợ Joystick
+        let isMouseDownJoy = false;
+        zone.addEventListener('mousedown', (e) => {
+            isMouseDownJoy = true;
+            handleJoyMove(e.clientX, e.clientY);
         });
 
-        function setupBtn(id, key) {
-            const btn = document.getElementById(id);
-            const start = () => keys[key] = true;
-            const end = () => keys[key] = false;
+        window.addEventListener('mousemove', (e) => {
+            if (isMouseDownJoy) {
+                handleJoyMove(e.clientX, e.clientY);
+            } else if (isCamDragging) {
+                let dX = e.clientX - prevTouchX;
+                let dY = e.clientY - prevTouchY;
+                camYaw -= dX * 0.005;
+                camPitch += dY * 0.005;
+                camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch));
+                prevTouchX = e.clientX;
+                prevTouchY = e.clientY;
+            }
+        });
 
-            btn.addEventListener('mousedown', start);
-            btn.addEventListener('mouseup', end);
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); start(); });
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); end(); });
+        window.addEventListener('mouseup', (e) => {
+            if (isMouseDownJoy) { isMouseDownJoy = false; resetJoy(); }
+            isCamDragging = false;
+        });
+
+        // Kéo camera bằng chuột ngoài vùng UI
+        window.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('#joystick-zone') && !e.target.closest('#action-buttons')) {
+                isCamDragging = true;
+                prevTouchX = e.clientX;
+                prevTouchY = e.clientY;
+            }
+        });
+
+        // 5. Xử Lý Nhảy & Chạy Nhanh
+        let isSprinting = false;
+        let velocityY = 0;
+        let isGrounded = true;
+        const gravity = -0.015;
+
+        const btnJump = document.getElementById('btn-jump');
+        const btnSprint = document.getElementById('btn-sprint');
+
+        function doJump() {
+            if (isGrounded) {
+                velocityY = 0.35; // Lực nhảy
+                isGrounded = false;
+            }
         }
 
-        setupBtn('btn-up', 'forward');
-        setupBtn('btn-down', 'backward');
-        setupBtn('btn-left', 'left');
-        setupBtn('btn-right', 'right');
+        btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); doJump(); });
+        btnJump.addEventListener('click', doJump);
 
-        // 5. Game Loop
+        // Nút Sprint (Chạy Nhanh)
+        const toggleSprint = (state) => {
+            isSprinting = state;
+            btnSprint.classList.toggle('active', state);
+        };
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); toggleSprint(true); });
+        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); toggleSprint(false); });
+        btnSprint.addEventListener('mousedown', () => toggleSprint(true));
+        btnSprint.addEventListener('mouseup', () => toggleSprint(false));
+
+        // Hỗ trợ phím Space (Nhảy) & Shift (Chạy nhanh) trên PC
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') doJump();
+            if (e.key === 'Shift') toggleSprint(true);
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift') toggleSprint(false);
+        });
+
+        // 6. Game Loop (Update)
         const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
 
             const time = clock.getElapsedTime();
-            let moveX = 0;
-            let moveZ = 0;
+            const moveMagnitude = Math.hypot(joyVector.x, joyVector.y);
+            const isMoving = moveMagnitude > 0.1;
 
-            if (keys.forward) moveZ -= 1;
-            if (keys.backward) moveZ += 1;
-            if (keys.left) moveX -= 1;
-            if (keys.right) moveX += 1;
+            // Xử lý Vật Lý Nhảy / Trọng Lực
+            p1.group.position.y += velocityY;
+            if (!isGrounded) {
+                velocityY += gravity;
+                if (p1.group.position.y <= 0) {
+                    p1.group.position.y = 0;
+                    velocityY = 0;
+                    isGrounded = true;
+                }
+            }
 
-            let isMoving = (moveX !== 0 || moveZ !== 0);
-
+            // Xử lý di chuyển theo Joystick
             if (isMoving) {
-                // Tính hướng di chuyển theo góc nhìn Camera (camYaw)
-                const moveAngle = Math.atan2(moveX, moveZ) + camYaw;
+                const speed = (isSprinting ? 0.28 : 0.14) * moveMagnitude;
+                const moveAngle = Math.atan2(joyVector.x, joyVector.y) + camYaw;
 
                 p1.group.position.x += Math.sin(moveAngle) * speed;
                 p1.group.position.z += Math.cos(moveAngle) * speed;
-
-                // Quay mặt nhân vật theo hướng di chuyển
                 p1.group.rotation.y = moveAngle;
 
-                // Animation di chuyển
-                p1.armL.rotation.x = Math.sin(time * 12) * 0.6;
-                p1.armR.rotation.x = -Math.sin(time * 12) * 0.6;
-                p1.legL.rotation.x = -Math.sin(time * 12) * 0.6;
-                p1.legR.rotation.x = Math.sin(time * 12) * 0.6;
+                // Tốc độ vung tay chân theo nhịp chạy/đi
+                const animSpeed = isSprinting ? 18 : 10;
+                p1.armL.rotation.x = Math.sin(time * animSpeed) * 0.7;
+                p1.armR.rotation.x = -Math.sin(time * animSpeed) * 0.7;
+                p1.legL.rotation.x = -Math.sin(time * animSpeed) * 0.7;
+                p1.legR.rotation.x = Math.sin(time * animSpeed) * 0.7;
             } else {
                 p1.armL.rotation.x = 0;
                 p1.armR.rotation.x = 0;
@@ -270,12 +364,10 @@
                 p1.legR.rotation.x = 0;
             }
 
-            // NPC nhún nhảy
+            // NPC nhún nhảy tại chỗ
             p2.group.position.y = Math.sin(time * 3) * 0.08;
-            p2.armL.rotation.x = Math.sin(time * 2) * 0.2;
-            p2.armR.rotation.x = -Math.sin(time * 2) * 0.2;
 
-            // Cập nhật vị trí Camera xoay quanh Player
+            // Cập nhật vị trí Camera đi theo Player
             const targetY = p1.group.position.y + 2;
             camera.position.x = p1.group.position.x + camDistance * Math.sin(camYaw) * Math.cos(camPitch);
             camera.position.y = targetY + camDistance * Math.sin(camPitch);
