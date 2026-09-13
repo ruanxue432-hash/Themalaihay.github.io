@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Roblox 3D - 2 Nhân Vật & Nút Di Chuyển</title>
+    <title>Roblox 3D - Di Chuyển & Xoay Camera 360</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: Arial, sans-serif; }
+        body { width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: Arial, sans-serif; touch-action: none; }
         
         /* Giao diện nút D-Pad di chuyển */
         #controls {
@@ -48,13 +48,18 @@
             background: rgba(0,0,0,0.6);
             padding: 10px 15px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div id="info">🎮 Dùng nút trên màn hình hoặc phím W-A-S-D / Mũi tên để di chuyển nhân vật Xanh!</div>
+    <div id="info">
+        🎮 <b>Di chuyển:</b> D-Pad hoặc WASD / Mũi tên<br>
+        🔄 <b>Xoay màn hình:</b> Vuốt màn hình / Kéo giữ chuột trái
+    </div>
 
     <!-- D-Pad Controls -->
     <div id="controls">
@@ -73,8 +78,6 @@
         scene.background = new THREE.Color(0x0f172a);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 8, 12);
-        camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -91,28 +94,25 @@
         scene.add(dirLight);
 
         // Sàn đấu (Grid)
-        const gridHelper = new THREE.GridHelper(30, 30, 0x38bdf8, 0x334155);
+        const gridHelper = new THREE.GridHelper(40, 40, 0x38bdf8, 0x334155);
         scene.add(gridHelper);
 
-        // 2. Hàm tạo nhân vật Roblox
+        // 2. Tạo nhân vật Roblox
         function createRobloxCharacter(colorHex) {
             const charGroup = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: colorHex });
             const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 }); // Đầu vàng
 
-            // Torso
             const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat);
             torso.position.y = 2.5;
             torso.castShadow = true;
             charGroup.add(torso);
 
-            // Head
             const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat);
             head.position.y = 4.2;
             head.castShadow = true;
             charGroup.add(head);
 
-            // Arms
             const armL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
             armL.position.set(-1.4, 2.5, 0);
             charGroup.add(armL);
@@ -121,7 +121,6 @@
             armR.position.set(1.4, 2.5, 0);
             charGroup.add(armR);
 
-            // Legs
             const legL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
             legL.position.set(-0.5, 0.5, 0);
             charGroup.add(legL);
@@ -133,20 +132,75 @@
             return { group: charGroup, armL, armR, legL, legR };
         }
 
-        // Tạo 2 nhân vật
         const p1 = createRobloxCharacter(0x0284c7); // Player (Xanh)
-        p1.group.position.set(-2, 0, 0);
+        p1.group.position.set(0, 0, 0);
         scene.add(p1.group);
 
         const p2 = createRobloxCharacter(0xef4444); // NPC (Đỏ)
-        p2.group.position.set(3, 0, -2);
+        p2.group.position.set(4, 0, -3);
         scene.add(p2.group);
 
-        // 3. Xử lý Di Chuyển
+        // 3. Cơ chế Xoay Màn Hình (Orbit Angles)
+        let camYaw = 0;          // Góc xoay ngang (trái/phải)
+        let camPitch = 0.3;      // Góc xoay dọc (lên/xuống)
+        const camDistance = 12;  // Khoảng cách camera tới nhân vật
+
+        let isDragging = false;
+        let previousTouchX = 0;
+        let previousTouchY = 0;
+
+        // Xoay bằng Chuột
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#controls')) return; // Không xoay khi bấm nút D-Pad
+            isDragging = true;
+            previousTouchX = e.clientX;
+            previousTouchY = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - previousTouchX;
+            const deltaY = e.clientY - previousTouchY;
+
+            camYaw -= deltaX * 0.005;
+            camPitch += deltaY * 0.005;
+            camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch)); // Giới hạn góc nhìn dọc
+
+            previousTouchX = e.clientX;
+            previousTouchY = e.clientY;
+        });
+
+        window.addEventListener('mouseup', () => isDragging = false);
+
+        // Xoay bằng Cảm Ứng (Điện thoại)
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('#controls')) return;
+            if (e.touches.length === 1) {
+                isDragging = true;
+                previousTouchX = e.touches[0].clientX;
+                previousTouchY = e.touches[0].clientY;
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging || e.touches.length !== 1) return;
+            const deltaX = e.touches[0].clientX - previousTouchX;
+            const deltaY = e.touches[0].clientY - previousTouchY;
+
+            camYaw -= deltaX * 0.005;
+            camPitch += deltaY * 0.005;
+            camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch));
+
+            previousTouchX = e.touches[0].clientX;
+            previousTouchY = e.touches[0].clientY;
+        });
+
+        window.addEventListener('touchend', () => isDragging = false);
+
+        // 4. Di chuyển Nhân vật
         const keys = { forward: false, backward: false, left: false, right: false };
         const speed = 0.15;
 
-        // Bắt sự kiện bàn phím (W-A-S-D & Mũi tên)
         window.addEventListener('keydown', (e) => {
             if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = true;
             if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = true;
@@ -161,7 +215,6 @@
             if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
         });
 
-        // Bắt sự kiện Nút trên màn hình (Hỗ trợ cả Cảm ứng & Chuột)
         function setupBtn(id, key) {
             const btn = document.getElementById(id);
             const start = () => keys[key] = true;
@@ -178,23 +231,34 @@
         setupBtn('btn-left', 'left');
         setupBtn('btn-right', 'right');
 
-        // 4. Game Loop (Cập nhật vị trí & Animation)
+        // 5. Game Loop
         const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
 
             const time = clock.getElapsedTime();
-            let isMoving = false;
+            let moveX = 0;
+            let moveZ = 0;
 
-            // Xử lý di chuyển cho Player (P1)
-            if (keys.forward) { p1.group.position.z -= speed; p1.group.rotation.y = Math.PI; isMoving = true; }
-            if (keys.backward) { p1.group.position.z += speed; p1.group.rotation.y = 0; isMoving = true; }
-            if (keys.left) { p1.group.position.x -= speed; p1.group.rotation.y = -Math.PI / 2; isMoving = true; }
-            if (keys.right) { p1.group.position.x += speed; p1.group.rotation.y = Math.PI / 2; isMoving = true; }
+            if (keys.forward) moveZ -= 1;
+            if (keys.backward) moveZ += 1;
+            if (keys.left) moveX -= 1;
+            if (keys.right) moveX += 1;
 
-            // Animation di chuyển (Đung đưa tay chân)
+            let isMoving = (moveX !== 0 || moveZ !== 0);
+
             if (isMoving) {
+                // Tính hướng di chuyển theo góc nhìn Camera (camYaw)
+                const moveAngle = Math.atan2(moveX, moveZ) + camYaw;
+
+                p1.group.position.x += Math.sin(moveAngle) * speed;
+                p1.group.position.z += Math.cos(moveAngle) * speed;
+
+                // Quay mặt nhân vật theo hướng di chuyển
+                p1.group.rotation.y = moveAngle;
+
+                // Animation di chuyển
                 p1.armL.rotation.x = Math.sin(time * 12) * 0.6;
                 p1.armR.rotation.x = -Math.sin(time * 12) * 0.6;
                 p1.legL.rotation.x = -Math.sin(time * 12) * 0.6;
@@ -206,22 +270,23 @@
                 p1.legR.rotation.x = 0;
             }
 
-            // Animation đứng nhún nhảy cho NPC (P2)
+            // NPC nhún nhảy
             p2.group.position.y = Math.sin(time * 3) * 0.08;
             p2.armL.rotation.x = Math.sin(time * 2) * 0.2;
             p2.armR.rotation.x = -Math.sin(time * 2) * 0.2;
 
-            // Camera đi theo Player
-            camera.position.x = p1.group.position.x;
-            camera.position.z = p1.group.position.z + 12;
-            camera.lookAt(p1.group.position.x, 2, p1.group.position.z);
+            // Cập nhật vị trí Camera xoay quanh Player
+            const targetY = p1.group.position.y + 2;
+            camera.position.x = p1.group.position.x + camDistance * Math.sin(camYaw) * Math.cos(camPitch);
+            camera.position.y = targetY + camDistance * Math.sin(camPitch);
+            camera.position.z = p1.group.position.z + camDistance * Math.cos(camYaw) * Math.cos(camPitch);
+            camera.lookAt(p1.group.position.x, targetY, p1.group.position.z);
 
             renderer.render(scene, camera);
         }
 
         animate();
 
-        // Tự căn chỉnh khi đổi kích thước màn hình
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
