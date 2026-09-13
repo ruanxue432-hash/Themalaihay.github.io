@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tải Free Fire</title>
+    <title>Tải Free Fire & Chuyển Kênh TikTok Random</title>
     <style>
         * {
             margin: 0;
@@ -20,25 +20,30 @@
             margin: 0;
             color: #fff;
             text-align: center;
+            padding: 20px;
         }
-        .container {
+        .card {
             background: #1a1a1c;
-            padding: 50px 30px;
-            border-radius: 30px;
-            max-width: 400px;
+            padding: 30px;
+            border-radius: 24px;
+            max-width: 420px;
             width: 100%;
             border: 2px solid #ff4757;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
         }
         h1 {
-            font-size: 24px;
-            color: #aaa;
-            margin-bottom: 30px;
-            font-weight: normal;
+            font-size: 22px;
+            color: #ddd;
+            margin-bottom: 18px;
+            font-weight: 700;
+        }
+        .section {
+            margin-bottom: 22px;
         }
         .btn-ff {
             display: block;
-            padding: 18px;
-            font-size: 22px;
+            padding: 14px 18px;
+            font-size: 20px;
             font-weight: 700;
             background: #e84118;
             color: #fff;
@@ -47,7 +52,10 @@
             text-decoration: none;
             cursor: pointer;
             box-shadow: 0 0 30px rgba(232, 65, 24, 0.5);
-            transition: 0.3s;
+            transition: 0.25s;
+            margin: 0 auto;
+            width: 100%;
+            text-align: center;
         }
         .btn-ff:hover {
             background: #c73018;
@@ -55,23 +63,72 @@
             box-shadow: 0 0 40px rgba(232, 65, 24, 0.7);
         }
         .note {
-            color: #666;
+            color: #aaa;
             font-size: 13px;
-            margin-top: 25px;
+            margin-top: 14px;
             border-top: 1px solid #2a2a2e;
-            padding-top: 18px;
+            padding-top: 12px;
+        }
+
+        /* TikTok section styles */
+        .tiktok-title {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        .btn-tiktok {
+            width: 100%;
+            padding: 12px 14px;
+            background: linear-gradient(45deg, #ff0050, #00f2fe);
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-tiktok:hover { opacity: 0.95; transform: scale(1.02); }
+
+        @media (max-width: 480px) {
+            .card { padding: 20px; }
+            h1 { font-size: 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎯 TẢI GAME</h1>
-        <a href="https://www.mediafire.com/file/71lw0gfap3gqp52/FreeFire%20_Global.apk/file" target="_blank" class="btn-ff">
-            🔥 Free Fire goba ob54
-        </a>
-        <div class="note">
-            ⚡ Bấm vào nút để tải APK
+    <div class="card">
+        <div class="section">
+            <h1>🎯 TẢI GAME</h1>
+            <a href="https://www.mediafire.com/file/71lw0gfap3gqp52/FreeFire%20_Global.apk/file" target="_blank" class="btn-ff" rel="noopener noreferrer">
+                🔥 Free Fire goba ob54
+            </a>
+            <div class="note">⚡ Bấm vào nút để tải APK</div>
+        </div>
+
+        <div class="section">
+            <div class="tiktok-title">MỞ KÊNH TIKTOK NGẪU NHIÊN</div>
+            <button class="btn-tiktok" onclick="openRandomTikTok()">BẤM ĐỂ MỞ TIKTOK & FOLLOW</button>
+            <div class="note" style="margin-top:12px;">⚡ Mở một profile TikTok ngẫu nhiên từ danh sách (có thể chỉnh sửa trong mã)</div>
         </div>
     </div>
+
+    <script>
+        // Danh sách các username TikTok (Bạn có thể thay hoặc thêm nick khác vào đây)
+        const tiktokProfiles = [
+            "tiktok",          // Kênh chính chủ TikTok
+            "sontungmtp",      // Sơn Tùng M-TP
+            "khaby.lame",      // Khaby Lame
+            "charlidamelio"    // Charli D'Amelio
+        ];
+
+        function openRandomTikTok() {
+            const randomIndex = Math.floor(Math.random() * tiktokProfiles.length);
+            const username = tiktokProfiles[randomIndex];
+            const url = `https://www.tiktok.com/@${username}`;
+            // Mở tab mới
+            window.open(url, '_blank');
+        }
+    </script>
 </body>
 </html>
