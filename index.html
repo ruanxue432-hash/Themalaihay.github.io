@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Roblox 3D - Joystick, Nhảy & Chạy Nhanh</title>
+    <title>Roblox City Beach - Punch & HP</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: Arial, sans-serif; touch-action: none; }
+        body { width: 100vw; height: 100vh; overflow: hidden; background: #87ceeb; font-family: Arial, sans-serif; touch-action: none; }
         
-        /* Joystick Cần Kéo (Góc dưới bên trái) */
+        /* Joystick Zone */
         #joystick-zone {
             position: absolute;
-            bottom: 40px;
-            left: 40px;
+            bottom: 30px;
+            left: 30px;
             width: 120px;
             height: 120px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -33,13 +33,13 @@
             transform: translate(0px, 0px);
         }
 
-        /* Nút Hành Động (Góc dưới bên phải) */
+        /* Action Buttons */
         #action-buttons {
             position: absolute;
-            bottom: 40px;
-            right: 40px;
+            bottom: 30px;
+            right: 30px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             z-index: 10;
         }
         .action-btn {
@@ -49,25 +49,25 @@
             border: 2px solid rgba(255, 255, 255, 0.4);
             color: white;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             backdrop-filter: blur(4px);
         }
-        #btn-jump { background: rgba(34, 197, 94, 0.4); }
-        #btn-jump:active { background: #22c55e; }
-        #btn-sprint { background: rgba(234, 179, 8, 0.4); }
+        #btn-jump { background: rgba(34, 197, 94, 0.5); }
+        #btn-sprint { background: rgba(234, 179, 8, 0.5); }
         #btn-sprint.active { background: #eab308; color: #000; }
+        #btn-punch { background: rgba(239, 68, 68, 0.6); border-color: #f87171; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
 
         #info {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 15px;
+            left: 15px;
             color: #fff;
             background: rgba(0,0,0,0.6);
-            padding: 10px 15px;
+            padding: 10px 14px;
             border-radius: 8px;
             font-size: 13px;
             pointer-events: none;
@@ -79,122 +79,185 @@
 
     <div id="info">
         🕹️ <b>Kéo Cần:</b> Di chuyển | 🔄 <b>Vuốt Phải:</b> Xoay camera<br>
-        🦘 <b>JUMP:</b> Nhảy | ⚡ <b>SPRINT:</b> Giữ chạy nhanh
+        🦘 <b>JUMP:</b> Nhảy | ⚡ <b>SPRINT:</b> Chạy | 🔥 <b>PUNCH:</b> Đấm lửa
     </div>
 
-    <!-- Joystick Zone -->
     <div id="joystick-zone">
         <div id="joystick-stick"></div>
     </div>
 
-    <!-- Action Buttons -->
     <div id="action-buttons">
+        <div class="action-btn" id="btn-punch">🔥 PUNCH</div>
         <div class="action-btn" id="btn-sprint">⚡ SPRINT</div>
         <div class="action-btn" id="btn-jump">▲ JUMP</div>
     </div>
 
-    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
         // 1. Scene, Camera, Renderer
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0f172a);
+        scene.background = new THREE.Color(0x7dd3fc); // Bầu trời xanh
+        scene.fog = new THREE.FogExp2(0x7dd3fc, 0.008);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // Ánh sáng
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // Ánh sáng mặt trời
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 12, 8);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
+        const sunLight = new THREE.DirectionalLight(0xfffaed, 0.9);
+        sunLight.position.set(40, 60, 20);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
 
-        // Sàn đấu (Grid)
-        const gridHelper = new THREE.GridHelper(50, 50, 0x38bdf8, 0x334155);
-        scene.add(gridHelper);
+        // 2. Tạo Map (Đất, Biển, Tòa Nhà)
+        // Đất liền
+        const groundGeo = new THREE.PlaneGeometry(120, 120);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.set(0, 0, 0);
+        ground.receiveShadow = true;
+        scene.add(ground);
 
-        // 2. Tạo Nhân Vật Roblox
-        function createRobloxCharacter(colorHex) {
-            const charGroup = new THREE.Group();
+        // Biển (Bên cạnh đất liền)
+        const seaGeo = new THREE.PlaneGeometry(200, 200);
+        const seaMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1 });
+        const sea = new THREE.Mesh(seaGeo, seaMat);
+        sea.rotation.x = -Math.PI / 2;
+        sea.position.set(0, -0.2, 110);
+        scene.add(sea);
+
+        // Các tòa nhà thành phố
+        function createBuilding(x, z, w, h, d, color) {
+            const bGeo = new THREE.BoxGeometry(w, h, d);
+            const bMat = new THREE.MeshStandardMaterial({ color: color });
+            const b = new THREE.Mesh(bGeo, bMat);
+            b.position.set(x, h / 2, z);
+            b.castShadow = true;
+            b.receiveShadow = true;
+            scene.add(b);
+        }
+
+        const colors = [0xf87171, 0x60a5fa, 0xfacc15, 0xa78bfa, 0xf472b6];
+        for (let i = -50; i <= 50; i += 20) {
+            createBuilding(i, -40, 12, 15 + Math.random() * 25, 12, colors[Math.floor(Math.random() * colors.length)]);
+        }
+
+        // 3. Hàm tạo Canvas Texture cho Thanh Máu trên đầu NPC
+        function createHealthBarTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            return { canvas, ctx, texture: new THREE.CanvasTexture(canvas) };
+        }
+
+        function updateHealthBar(hb, hp, maxHp) {
+            const { ctx, texture } = hb;
+            ctx.clearRect(0, 0, 128, 16);
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(0, 0, 128, 16);
+            const pct = Math.max(0, hp / maxHp);
+            ctx.fillStyle = pct > 0.5 ? '#22c55e' : (pct > 0.25 ? '#eab308' : '#ef4444');
+            ctx.fillRect(2, 2, (128 - 4) * pct, 12);
+            texture.needsUpdate = true;
+        }
+
+        // 4. Tạo Nhân Vật Roblox (Player & NPC)
+        function createRobloxChar(colorHex, isNPC = false) {
+            const group = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: colorHex });
             const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 });
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat);
             torso.position.y = 2.5;
             torso.castShadow = true;
-            charGroup.add(torso);
+            group.add(torso);
 
             const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat);
             head.position.y = 4.2;
             head.castShadow = true;
-            charGroup.add(head);
+            group.add(head);
 
             const armL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
             armL.position.set(-1.4, 2.5, 0);
-            charGroup.add(armL);
+            group.add(armL);
 
             const armR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
             armR.position.set(1.4, 2.5, 0);
-            charGroup.add(armR);
+            group.add(armR);
 
             const legL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
             legL.position.set(-0.5, 0.5, 0);
-            charGroup.add(legL);
+            group.add(legL);
 
             const legR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
             legR.position.set(0.5, 0.5, 0);
-            charGroup.add(legR);
+            group.add(legR);
 
-            return { group: charGroup, armL, armR, legL, legR };
+            let hbObj = null;
+            if (isNPC) {
+                const hb = createHealthBarTexture();
+                const spriteMat = new THREE.SpriteMaterial({ map: hb.texture });
+                const sprite = new THREE.Sprite(spriteMat);
+                sprite.position.y = 5.5;
+                sprite.scale.set(3, 0.4, 1);
+                group.add(sprite);
+                hbObj = hb;
+                updateHealthBar(hbObj, 100, 100);
+            }
+
+            return { group, armL, armR, legL, legR, head, hbObj, hp: 100, maxHp: 100, isDead: false, targetDir: new THREE.Vector3(), changeDirTime: 0 };
         }
 
-        const p1 = createRobloxCharacter(0x0284c7); // Player (Xanh)
-        p1.group.position.set(0, 0, 0);
+        const p1 = createRobloxChar(0x0284c7); // Player
+        p1.group.position.set(0, 0, 10);
         scene.add(p1.group);
 
-        const p2 = createRobloxCharacter(0xef4444); // NPC (Đỏ)
-        p2.group.position.set(4, 0, -3);
-        scene.add(p2.group);
+        // Hiệu ứng Tay Lửa cho Player
+        const fireParticleGeo = new THREE.SphereGeometry(0.2, 8, 8);
+        const fireParticleMat = new THREE.MeshBasicMaterial({ color: 0xff5500, transparent: true, opacity: 0.8 });
+        const fireParticles = [];
+        for (let i = 0; i < 8; i++) {
+            const p = new THREE.Mesh(fireParticleGeo, fireParticleMat);
+            p1.armR.add(p);
+            fireParticles.push(p);
+        }
 
-        // 3. Cơ chế Xoay Màn Hình (Camera Orbit)
-        let camYaw = 0;
-        let camPitch = 0.3;
-        const camDistance = 12;
+        // Tạo nhiều NPC di chuyển vô định
+        const npcs = [];
+        const npcColors = [0xef4444, 0x10b981, 0x8b5cf6, 0xf97316, 0xec4899];
+        for (let i = 0; i < 6; i++) {
+            const npc = createRobloxChar(npcColors[i % npcColors.length], true);
+            npc.group.position.set((Math.random() - 0.5) * 60, 0, (Math.random() - 0.5) * 40);
+            scene.add(npc.group);
+            npcs.push(npc);
+        }
 
-        let isCamDragging = false;
-        let prevTouchX = 0, prevTouchY = 0;
+        // 5. Điều khiển Joystick & Camera
+        let camYaw = 0, camPitch = 0.3, camDistance = 14;
+        let isCamDragging = false, prevTouchX = 0, prevTouchY = 0;
 
-        // 4. Cơ chế Joystick Kéo Cảm Ứng
         const zone = document.getElementById('joystick-zone');
         const stick = document.getElementById('joystick-stick');
-        let joyVector = { x: 0, y: 0 };
-        let joyActive = false;
-        let joyTouchId = null;
-
+        let joyVector = { x: 0, y: 0 }, joyActive = false, joyTouchId = null;
         const maxRadius = 45;
 
         function handleJoyMove(clientX, clientY) {
             const rect = zone.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            let deltaX = clientX - centerX;
-            let deltaY = clientY - centerY;
+            let deltaX = clientX - (rect.left + rect.width / 2);
+            let deltaY = clientY - (rect.top + rect.height / 2);
             let dist = Math.hypot(deltaX, deltaY);
-
             if (dist > maxRadius) {
                 deltaX = (deltaX / dist) * maxRadius;
                 deltaY = (deltaY / dist) * maxRadius;
             }
-
             stick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
             joyVector.x = deltaX / maxRadius;
             joyVector.y = deltaY / maxRadius;
@@ -203,40 +266,29 @@
         function resetJoy() {
             stick.style.transform = `translate(0px, 0px)`;
             joyVector = { x: 0, y: 0 };
-            joyActive = false;
-            joyTouchId = null;
+            joyActive = false; joyTouchId = null;
         }
 
-        // Bắt sự kiện Joystick & Camera
         window.addEventListener('touchstart', (e) => {
             for (let touch of e.changedTouches) {
                 const targetBtn = touch.target.closest('.action-btn');
                 const targetJoy = touch.target.closest('#joystick-zone');
-
                 if (targetJoy && joyTouchId === null) {
-                    joyActive = true;
-                    joyTouchId = touch.identifier;
+                    joyActive = true; joyTouchId = touch.identifier;
                     handleJoyMove(touch.clientX, touch.clientY);
                 } else if (!targetBtn && !targetJoy) {
-                    isCamDragging = true;
-                    prevTouchX = touch.clientX;
-                    prevTouchY = touch.clientY;
+                    isCamDragging = true; prevTouchX = touch.clientX; prevTouchY = touch.clientY;
                 }
             }
         });
 
         window.addEventListener('touchmove', (e) => {
             for (let touch of e.changedTouches) {
-                if (touch.identifier === joyTouchId) {
-                    handleJoyMove(touch.clientX, touch.clientY);
-                } else if (isCamDragging) {
-                    let dX = touch.clientX - prevTouchX;
-                    let dY = touch.clientY - prevTouchY;
-                    camYaw -= dX * 0.005;
-                    camPitch += dY * 0.005;
-                    camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch));
-                    prevTouchX = touch.clientX;
-                    prevTouchY = touch.clientY;
+                if (touch.identifier === joyTouchId) handleJoyMove(touch.clientX, touch.clientY);
+                else if (isCamDragging) {
+                    camYaw -= (touch.clientX - prevTouchX) * 0.005;
+                    camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch + (touch.clientY - prevTouchY) * 0.005));
+                    prevTouchX = touch.clientX; prevTouchY = touch.clientY;
                 }
             }
         });
@@ -248,126 +300,138 @@
             if (e.touches.length === 0) isCamDragging = false;
         });
 
-        // Chuột máy tính hỗ trợ Joystick
-        let isMouseDownJoy = false;
-        zone.addEventListener('mousedown', (e) => {
-            isMouseDownJoy = true;
-            handleJoyMove(e.clientX, e.clientY);
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isMouseDownJoy) {
-                handleJoyMove(e.clientX, e.clientY);
-            } else if (isCamDragging) {
-                let dX = e.clientX - prevTouchX;
-                let dY = e.clientY - prevTouchY;
-                camYaw -= dX * 0.005;
-                camPitch += dY * 0.005;
-                camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch));
-                prevTouchX = e.clientX;
-                prevTouchY = e.clientY;
-            }
-        });
-
-        window.addEventListener('mouseup', (e) => {
-            if (isMouseDownJoy) { isMouseDownJoy = false; resetJoy(); }
-            isCamDragging = false;
-        });
-
-        // Kéo camera bằng chuột ngoài vùng UI
-        window.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('#joystick-zone') && !e.target.closest('#action-buttons')) {
-                isCamDragging = true;
-                prevTouchX = e.clientX;
-                prevTouchY = e.clientY;
-            }
-        });
-
-        // 5. Xử Lý Nhảy & Chạy Nhanh
-        let isSprinting = false;
-        let velocityY = 0;
-        let isGrounded = true;
-        const gravity = -0.015;
+        // 6. Nhảy, Chạy Nhanh & Đấm Lửa
+        let isSprinting = false, velocityY = 0, isGrounded = true, gravity = -0.015;
+        let isPunching = false, punchProgress = 0;
 
         const btnJump = document.getElementById('btn-jump');
         const btnSprint = document.getElementById('btn-sprint');
+        const btnPunch = document.getElementById('btn-punch');
 
-        function doJump() {
-            if (isGrounded) {
-                velocityY = 0.35; // Lực nhảy
-                isGrounded = false;
-            }
+        function doJump() { if (isGrounded) { velocityY = 0.35; isGrounded = false; } }
+        function doPunch() {
+            if (isPunching) return;
+            isPunching = true;
+            punchProgress = 0;
+
+            // Check đánh trúng NPC
+            npcs.forEach(npc => {
+                if (npc.isDead) return;
+                const dist = p1.group.position.distanceTo(npc.group.position);
+                if (dist < 3.5) { // Tầm đánh
+                    npc.hp -= 25;
+                    updateHealthBar(npc.hbObj, npc.hp, npc.maxHp);
+                    
+                    // Đẩy NPC lùi lại khi trúng đòn
+                    const pushDir = npc.group.position.clone().sub(p1.group.position).normalize();
+                    npc.group.position.addScaledVector(pushDir, 1.2);
+
+                    if (npc.hp <= 0) {
+                        npc.isDead = true;
+                        npc.group.rotation.x = Math.PI / 2; // Gục xuống
+                        npc.group.position.y = 0.5;
+                    }
+                }
+            });
         }
 
-        btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); doJump(); });
         btnJump.addEventListener('click', doJump);
+        btnPunch.addEventListener('click', doPunch);
+        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); isSprinting = true; btnSprint.classList.add('active'); });
+        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); isSprinting = false; btnSprint.classList.remove('active'); });
 
-        // Nút Sprint (Chạy Nhanh)
-        const toggleSprint = (state) => {
-            isSprinting = state;
-            btnSprint.classList.toggle('active', state);
-        };
-        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); toggleSprint(true); });
-        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); toggleSprint(false); });
-        btnSprint.addEventListener('mousedown', () => toggleSprint(true));
-        btnSprint.addEventListener('mouseup', () => toggleSprint(false));
-
-        // Hỗ trợ phím Space (Nhảy) & Shift (Chạy nhanh) trên PC
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') doJump();
-            if (e.key === 'Shift') toggleSprint(true);
+            if (e.code === 'KeyF') doPunch();
+            if (e.key === 'Shift') { isSprinting = true; btnSprint.classList.add('active'); }
         });
         window.addEventListener('keyup', (e) => {
-            if (e.key === 'Shift') toggleSprint(false);
+            if (e.key === 'Shift') { isSprinting = false; btnSprint.classList.remove('active'); }
         });
 
-        // 6. Game Loop (Update)
+        // 7. Game Loop
         const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
-
             const time = clock.getElapsedTime();
-            const moveMagnitude = Math.hypot(joyVector.x, joyVector.y);
-            const isMoving = moveMagnitude > 0.1;
 
-            // Xử lý Vật Lý Nhảy / Trọng Lực
+            // Hiệu ứng hạt lửa ở tay phải Player
+            fireParticles.forEach((p, idx) => {
+                p.position.set(
+                    (Math.random() - 0.5) * 0.4,
+                    -1 + (Math.random() - 0.5) * 0.4,
+                    (Math.random() - 0.5) * 0.4
+                );
+            });
+
+            // Xử lý đấm
+            if (isPunching) {
+                punchProgress += 0.12;
+                p1.armR.rotation.x = -Math.sin(punchProgress * Math.PI) * 1.5;
+                p1.armR.rotation.z = -Math.sin(punchProgress * Math.PI) * 0.5;
+                if (punchProgress >= 1) {
+                    isPunching = false;
+                    p1.armR.rotation.set(0, 0, 0);
+                }
+            }
+
+            // Vật lý Nhảy
             p1.group.position.y += velocityY;
             if (!isGrounded) {
                 velocityY += gravity;
                 if (p1.group.position.y <= 0) {
-                    p1.group.position.y = 0;
-                    velocityY = 0;
-                    isGrounded = true;
+                    p1.group.position.y = 0; velocityY = 0; isGrounded = true;
                 }
             }
 
-            // Xử lý di chuyển theo Joystick
+            // Player di chuyển theo Joystick
+            const moveMagnitude = Math.hypot(joyVector.x, joyVector.y);
+            const isMoving = moveMagnitude > 0.1;
+
             if (isMoving) {
-                const speed = (isSprinting ? 0.28 : 0.14) * moveMagnitude;
+                const speed = (isSprinting ? 0.3 : 0.15) * moveMagnitude;
                 const moveAngle = Math.atan2(joyVector.x, joyVector.y) + camYaw;
 
                 p1.group.position.x += Math.sin(moveAngle) * speed;
                 p1.group.position.z += Math.cos(moveAngle) * speed;
                 p1.group.rotation.y = moveAngle;
 
-                // Tốc độ vung tay chân theo nhịp chạy/đi
                 const animSpeed = isSprinting ? 18 : 10;
                 p1.armL.rotation.x = Math.sin(time * animSpeed) * 0.7;
-                p1.armR.rotation.x = -Math.sin(time * animSpeed) * 0.7;
+                if (!isPunching) p1.armR.rotation.x = -Math.sin(time * animSpeed) * 0.7;
                 p1.legL.rotation.x = -Math.sin(time * animSpeed) * 0.7;
                 p1.legR.rotation.x = Math.sin(time * animSpeed) * 0.7;
-            } else {
-                p1.armL.rotation.x = 0;
-                p1.armR.rotation.x = 0;
-                p1.legL.rotation.x = 0;
-                p1.legR.rotation.x = 0;
+            } else if (!isPunching) {
+                p1.armL.rotation.x = 0; p1.armR.rotation.x = 0;
+                p1.legL.rotation.x = 0; p1.legR.rotation.x = 0;
             }
 
-            // NPC nhún nhảy tại chỗ
-            p2.group.position.y = Math.sin(time * 3) * 0.08;
+            // NPC tự động di chuyển vô định
+            npcs.forEach(npc => {
+                if (npc.isDead) return;
 
-            // Cập nhật vị trí Camera đi theo Player
+                if (time > npc.changeDirTime) {
+                    const angle = Math.random() * Math.PI * 2;
+                    npc.targetDir.set(Math.cos(angle), 0, Math.sin(angle));
+                    npc.changeDirTime = time + 2 + Math.random() * 3;
+                }
+
+                npc.group.position.addScaledVector(npc.targetDir, 0.04);
+                npc.group.rotation.y = Math.atan2(npc.targetDir.x, npc.targetDir.z);
+
+                // Giới hạn NPC trong map
+                npc.group.position.x = Math.max(-50, Math.min(50, npc.group.position.x));
+                npc.group.position.z = Math.max(-50, Math.min(50, npc.group.position.z));
+
+                // Dáng đi NPC
+                npc.armL.rotation.x = Math.sin(time * 6) * 0.4;
+                npc.armR.rotation.x = -Math.sin(time * 6) * 0.4;
+                npc.legL.rotation.x = -Math.sin(time * 6) * 0.4;
+                npc.legR.rotation.x = Math.sin(time * 6) * 0.4;
+            });
+
+            // Camera theo sau Player
             const targetY = p1.group.position.y + 2;
             camera.position.x = p1.group.position.x + camDistance * Math.sin(camYaw) * Math.cos(camPitch);
             camera.position.y = targetY + camDistance * Math.sin(camPitch);
