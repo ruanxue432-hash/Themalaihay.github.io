@@ -3,12 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Roblox City Beach - Punch & HP</title>
+    <title>Roblox City Beach - Delta X Executor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #87ceeb; font-family: Arial, sans-serif; touch-action: none; }
+        body { width: 100vw; height: 100vh; overflow: hidden; background: #87ceeb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
         
-        /* Joystick Zone */
+        /* Icon Toggle Delta X */
+        #delta-btn-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #1e1b4b, #4338ca);
+            border: 2px solid #818cf8;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 900;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* UI Menu Delta X */
+        #delta-executor {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 480px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 2px solid #6366f1;
+            border-radius: 16px;
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 99;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+        #delta-executor.active { display: flex; }
+
+        .delta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+        .delta-header span { color: #818cf8; font-size: 13px; }
+
+        #delta-code-input {
+            width: 100%;
+            height: 140px;
+            background: #090d16;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #4ade80;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            padding: 10px;
+            resize: none;
+            outline: none;
+            user-select: text;
+        }
+
+        .delta-controls { display: flex; gap: 8px; }
+        .delta-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+        }
+        #btn-exec { background: #22c55e; }
+        #btn-clear { background: #ef4444; }
+        #btn-preset { background: #8b5cf6; }
+
+        /* Controls Game Normal UI */
         #joystick-zone {
             position: absolute;
             bottom: 30px;
@@ -32,8 +117,6 @@
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
             transform: translate(0px, 0px);
         }
-
-        /* Action Buttons */
         #action-buttons {
             position: absolute;
             bottom: 30px;
@@ -59,7 +142,7 @@
         #btn-jump { background: rgba(34, 197, 94, 0.5); }
         #btn-sprint { background: rgba(234, 179, 8, 0.5); }
         #btn-sprint.active { background: #eab308; color: #000; }
-        #btn-punch { background: rgba(239, 68, 68, 0.6); border-color: #f87171; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+        #btn-punch { background: rgba(239, 68, 68, 0.6); border-color: #f87171; }
 
         #info {
             position: absolute;
@@ -69,7 +152,7 @@
             background: rgba(0,0,0,0.6);
             padding: 10px 14px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             pointer-events: none;
             z-index: 10;
         }
@@ -78,8 +161,25 @@
 <body>
 
     <div id="info">
-        🕹️ <b>Kéo Cần:</b> Di chuyển | 🔄 <b>Vuốt Phải:</b> Xoay camera<br>
-        🦘 <b>JUMP:</b> Nhảy | ⚡ <b>SPRINT:</b> Chạy | 🔥 <b>PUNCH:</b> Đấm lửa
+        🕹️ <b>Cần Kéo:</b> Di chuyển | 🔄 <b>Vuốt Phải:</b> Xoay camera<br>
+        🦘 <b>JUMP</b> | ⚡ <b>SPRINT</b> | 🔥 <b>PUNCH</b> | ⚡ <b>Delta X (Top Right)</b>
+    </div>
+
+    <!-- Toggle Button Delta X -->
+    <div id="delta-btn-toggle">Δ</div>
+
+    <!-- Executor Window -->
+    <div id="delta-executor">
+        <div class="delta-header">
+            <div>DELTA X <span>v2.6 Executor</span></div>
+            <div style="cursor:pointer;" id="delta-close">✖</div>
+        </div>
+        <textarea id="delta-code-input" placeholder="// Nhập script JS/Roblox tại đây...&#10;// Ví dụ: player.speed = 0.8;&#10;// player.jumpPower = 0.8;&#10;// killAllNPCs();"></textarea>
+        <div class="delta-controls">
+            <button class="delta-btn" id="btn-exec">EXECUTE</button>
+            <button class="delta-btn" id="btn-preset">SCRIPT MẪU</button>
+            <button class="delta-btn" id="btn-clear">CLEAR</button>
+        </div>
     </div>
 
     <div id="joystick-zone">
@@ -95,9 +195,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // 1. Scene, Camera, Renderer
+        // 1. Scene Setup
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x7dd3fc); // Bầu trời xanh
+        scene.background = new THREE.Color(0x7dd3fc);
         scene.fog = new THREE.FogExp2(0x7dd3fc, 0.008);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -106,7 +206,6 @@
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // Ánh sáng mặt trời
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
 
@@ -115,45 +214,30 @@
         sunLight.castShadow = true;
         scene.add(sunLight);
 
-        // 2. Tạo Map (Đất, Biển, Tòa Nhà)
-        // Đất liền
-        const groundGeo = new THREE.PlaneGeometry(120, 120);
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
+        // Map
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
         ground.rotation.x = -Math.PI / 2;
-        ground.position.set(0, 0, 0);
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Biển (Bên cạnh đất liền)
-        const seaGeo = new THREE.PlaneGeometry(200, 200);
-        const seaMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1 });
-        const sea = new THREE.Mesh(seaGeo, seaMat);
+        const sea = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1 }));
         sea.rotation.x = -Math.PI / 2;
         sea.position.set(0, -0.2, 110);
         scene.add(sea);
 
-        // Các tòa nhà thành phố
-        function createBuilding(x, z, w, h, d, color) {
-            const bGeo = new THREE.BoxGeometry(w, h, d);
-            const bMat = new THREE.MeshStandardMaterial({ color: color });
-            const b = new THREE.Mesh(bGeo, bMat);
-            b.position.set(x, h / 2, z);
+        for (let i = -50; i <= 50; i += 20) {
+            const h = 15 + Math.random() * 25;
+            const b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff }));
+            b.position.set(i, h / 2, -40);
             b.castShadow = true;
             b.receiveShadow = true;
             scene.add(b);
         }
 
-        const colors = [0xf87171, 0x60a5fa, 0xfacc15, 0xa78bfa, 0xf472b6];
-        for (let i = -50; i <= 50; i += 20) {
-            createBuilding(i, -40, 12, 15 + Math.random() * 25, 12, colors[Math.floor(Math.random() * colors.length)]);
-        }
-
-        // 3. Hàm tạo Canvas Texture cho Thanh Máu trên đầu NPC
+        // Healthbar & Roblox Character
         function createHealthBarTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 16;
+            canvas.width = 128; canvas.height = 16;
             const ctx = canvas.getContext('2d');
             return { canvas, ctx, texture: new THREE.CanvasTexture(canvas) };
         }
@@ -169,116 +253,69 @@
             texture.needsUpdate = true;
         }
 
-        // 4. Tạo Nhân Vật Roblox (Player & NPC)
         function createRobloxChar(colorHex, isNPC = false) {
             const group = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: colorHex });
             const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 });
 
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat);
-            torso.position.y = 2.5;
-            torso.castShadow = true;
-            group.add(torso);
-
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat);
-            head.position.y = 4.2;
-            head.castShadow = true;
-            group.add(head);
-
-            const armL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
-            armL.position.set(-1.4, 2.5, 0);
-            group.add(armL);
-
-            const armR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
-            armR.position.set(1.4, 2.5, 0);
-            group.add(armR);
-
-            const legL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
-            legL.position.set(-0.5, 0.5, 0);
-            group.add(legL);
-
-            const legR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
-            legR.position.set(0.5, 0.5, 0);
-            group.add(legR);
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat); torso.position.y = 2.5; group.add(torso);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat); head.position.y = 4.2; group.add(head);
+            const armL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat); armL.position.set(-1.4, 2.5, 0); group.add(armL);
+            const armR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat); armR.position.set(1.4, 2.5, 0); group.add(armR);
+            const legL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat); legL.position.set(-0.5, 0.5, 0); group.add(legL);
+            const legR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat); legR.position.set(0.5, 0.5, 0); group.add(legR);
 
             let hbObj = null;
             if (isNPC) {
                 const hb = createHealthBarTexture();
-                const spriteMat = new THREE.SpriteMaterial({ map: hb.texture });
-                const sprite = new THREE.Sprite(spriteMat);
-                sprite.position.y = 5.5;
-                sprite.scale.set(3, 0.4, 1);
-                group.add(sprite);
-                hbObj = hb;
-                updateHealthBar(hbObj, 100, 100);
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: hb.texture }));
+                sprite.position.y = 5.5; sprite.scale.set(3, 0.4, 1); group.add(sprite);
+                hbObj = hb; updateHealthBar(hbObj, 100, 100);
             }
 
-            return { group, armL, armR, legL, legR, head, hbObj, hp: 100, maxHp: 100, isDead: false, targetDir: new THREE.Vector3(), changeDirTime: 0 };
+            return { group, armL, armR, legL, legR, hbObj, hp: 100, maxHp: 100, isDead: false, targetDir: new THREE.Vector3(), changeDirTime: 0 };
         }
 
-        const p1 = createRobloxChar(0x0284c7); // Player
+        const playerStats = { speed: 0.15, sprintSpeed: 0.3, jumpPower: 0.35 };
+        const p1 = createRobloxChar(0x0284c7);
         p1.group.position.set(0, 0, 10);
         scene.add(p1.group);
 
-        // Hiệu ứng Tay Lửa cho Player
-        const fireParticleGeo = new THREE.SphereGeometry(0.2, 8, 8);
-        const fireParticleMat = new THREE.MeshBasicMaterial({ color: 0xff5500, transparent: true, opacity: 0.8 });
-        const fireParticles = [];
-        for (let i = 0; i < 8; i++) {
-            const p = new THREE.Mesh(fireParticleGeo, fireParticleMat);
-            p1.armR.add(p);
-            fireParticles.push(p);
-        }
-
-        // Tạo nhiều NPC di chuyển vô định
         const npcs = [];
-        const npcColors = [0xef4444, 0x10b981, 0x8b5cf6, 0xf97316, 0xec4899];
         for (let i = 0; i < 6; i++) {
-            const npc = createRobloxChar(npcColors[i % npcColors.length], true);
+            const npc = createRobloxChar(Math.random() * 0xffffff, true);
             npc.group.position.set((Math.random() - 0.5) * 60, 0, (Math.random() - 0.5) * 40);
             scene.add(npc.group);
             npcs.push(npc);
         }
 
-        // 5. Điều khiển Joystick & Camera
+        // Joystick & Cam
         let camYaw = 0, camPitch = 0.3, camDistance = 14;
         let isCamDragging = false, prevTouchX = 0, prevTouchY = 0;
-
         const zone = document.getElementById('joystick-zone');
         const stick = document.getElementById('joystick-stick');
-        let joyVector = { x: 0, y: 0 }, joyActive = false, joyTouchId = null;
+        let joyVector = { x: 0, y: 0 }, joyTouchId = null;
         const maxRadius = 45;
 
         function handleJoyMove(clientX, clientY) {
             const rect = zone.getBoundingClientRect();
-            let deltaX = clientX - (rect.left + rect.width / 2);
-            let deltaY = clientY - (rect.top + rect.height / 2);
-            let dist = Math.hypot(deltaX, deltaY);
-            if (dist > maxRadius) {
-                deltaX = (deltaX / dist) * maxRadius;
-                deltaY = (deltaY / dist) * maxRadius;
-            }
-            stick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-            joyVector.x = deltaX / maxRadius;
-            joyVector.y = deltaY / maxRadius;
+            let dX = clientX - (rect.left + rect.width / 2);
+            let dY = clientY - (rect.top + rect.height / 2);
+            let dist = Math.hypot(dX, dY);
+            if (dist > maxRadius) { dX = (dX / dist) * maxRadius; dY = (dY / dist) * maxRadius; }
+            stick.style.transform = `translate(${dX}px, ${dY}px)`;
+            joyVector.x = dX / maxRadius; joyVector.y = dY / maxRadius;
         }
 
-        function resetJoy() {
-            stick.style.transform = `translate(0px, 0px)`;
-            joyVector = { x: 0, y: 0 };
-            joyActive = false; joyTouchId = null;
-        }
+        function resetJoy() { stick.style.transform = `translate(0px, 0px)`; joyVector = { x: 0, y: 0 }; joyTouchId = null; }
 
         window.addEventListener('touchstart', (e) => {
             for (let touch of e.changedTouches) {
+                if (e.target.closest('#delta-executor') || e.target.closest('#delta-btn-toggle')) return;
                 const targetBtn = touch.target.closest('.action-btn');
                 const targetJoy = touch.target.closest('#joystick-zone');
-                if (targetJoy && joyTouchId === null) {
-                    joyActive = true; joyTouchId = touch.identifier;
-                    handleJoyMove(touch.clientX, touch.clientY);
-                } else if (!targetBtn && !targetJoy) {
-                    isCamDragging = true; prevTouchX = touch.clientX; prevTouchY = touch.clientY;
-                }
+                if (targetJoy && joyTouchId === null) { joyTouchId = touch.identifier; handleJoyMove(touch.clientX, touch.clientY); }
+                else if (!targetBtn && !targetJoy) { isCamDragging = true; prevTouchX = touch.clientX; prevTouchY = touch.clientY; }
             }
         });
 
@@ -294,43 +331,26 @@
         });
 
         window.addEventListener('touchend', (e) => {
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === joyTouchId) resetJoy();
-            }
+            for (let touch of e.changedTouches) { if (touch.identifier === joyTouchId) resetJoy(); }
             if (e.touches.length === 0) isCamDragging = false;
         });
 
-        // 6. Nhảy, Chạy Nhanh & Đấm Lửa
-        let isSprinting = false, velocityY = 0, isGrounded = true, gravity = -0.015;
-        let isPunching = false, punchProgress = 0;
-
+        // Jump, Sprint & Punch
+        let isSprinting = false, velocityY = 0, isGrounded = true, gravity = -0.015, isPunching = false, punchProgress = 0;
         const btnJump = document.getElementById('btn-jump');
         const btnSprint = document.getElementById('btn-sprint');
         const btnPunch = document.getElementById('btn-punch');
 
-        function doJump() { if (isGrounded) { velocityY = 0.35; isGrounded = false; } }
+        function doJump() { if (isGrounded) { velocityY = playerStats.jumpPower; isGrounded = false; } }
         function doPunch() {
-            if (isPunching) return;
-            isPunching = true;
-            punchProgress = 0;
-
-            // Check đánh trúng NPC
+            if (isPunching) return; isPunching = true; punchProgress = 0;
             npcs.forEach(npc => {
                 if (npc.isDead) return;
-                const dist = p1.group.position.distanceTo(npc.group.position);
-                if (dist < 3.5) { // Tầm đánh
-                    npc.hp -= 25;
-                    updateHealthBar(npc.hbObj, npc.hp, npc.maxHp);
-                    
-                    // Đẩy NPC lùi lại khi trúng đòn
-                    const pushDir = npc.group.position.clone().sub(p1.group.position).normalize();
-                    npc.group.position.addScaledVector(pushDir, 1.2);
-
-                    if (npc.hp <= 0) {
-                        npc.isDead = true;
-                        npc.group.rotation.x = Math.PI / 2; // Gục xuống
-                        npc.group.position.y = 0.5;
-                    }
+                if (p1.group.position.distanceTo(npc.group.position) < 3.5) {
+                    npc.hp -= 25; updateHealthBar(npc.hbObj, npc.hp, npc.maxHp);
+                    const push = npc.group.position.clone().sub(p1.group.position).normalize();
+                    npc.group.position.addScaledVector(push, 1.2);
+                    if (npc.hp <= 0) { npc.isDead = true; npc.group.rotation.x = Math.PI / 2; npc.group.position.y = 0.5; }
                 }
             });
         }
@@ -340,98 +360,88 @@
         btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); isSprinting = true; btnSprint.classList.add('active'); });
         btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); isSprinting = false; btnSprint.classList.remove('active'); });
 
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') doJump();
-            if (e.code === 'KeyF') doPunch();
-            if (e.key === 'Shift') { isSprinting = true; btnSprint.classList.add('active'); }
-        });
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'Shift') { isSprinting = false; btnSprint.classList.remove('active'); }
+        // --- HỆ THỐNG EXECUTOR DELTA X ---
+        const toggleBtn = document.getElementById('delta-btn-toggle');
+        const executor = document.getElementById('delta-executor');
+        const closeBtn = document.getElementById('delta-close');
+        const codeInput = document.getElementById('delta-code-input');
+        const btnExec = document.getElementById('btn-exec');
+        const btnClear = document.getElementById('btn-clear');
+        const btnPreset = document.getElementById('btn-preset');
+
+        toggleBtn.addEventListener('click', () => executor.classList.toggle('active'));
+        closeBtn.addEventListener('click', () => executor.classList.remove('active'));
+        btnClear.addEventListener('click', () => codeInput.value = '');
+
+        // Các hàm hỗ trợ Script Executor
+        window.player = playerStats;
+        window.killAllNPCs = () => {
+            npcs.forEach(npc => {
+                npc.hp = 0; npc.isDead = true;
+                updateHealthBar(npc.hbObj, 0, 100);
+                npc.group.rotation.x = Math.PI / 2; npc.group.position.y = 0.5;
+            });
+        };
+        window.tpTo = (x, z) => p1.group.position.set(x, p1.group.position.y, z);
+
+        btnPreset.addEventListener('click', () => {
+            codeInput.value = `// Hack Speed + Jump High\nplayer.speed = 0.5;\nplayer.jumpPower = 0.7;\n\n// Kill All NPCs\n// killAllNPCs();`;
         });
 
-        // 7. Game Loop
+        btnExec.addEventListener('click', () => {
+            try {
+                const scriptText = codeInput.value;
+                new Function(scriptText)();
+                alert("⚡ Executed Successfully!");
+            } catch (err) {
+                alert("❌ Script Error: " + err.message);
+            }
+        });
+
+        // Game Loop
         const clock = new THREE.Clock();
-
         function animate() {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
 
-            // Hiệu ứng hạt lửa ở tay phải Player
-            fireParticles.forEach((p, idx) => {
-                p.position.set(
-                    (Math.random() - 0.5) * 0.4,
-                    -1 + (Math.random() - 0.5) * 0.4,
-                    (Math.random() - 0.5) * 0.4
-                );
-            });
-
-            // Xử lý đấm
             if (isPunching) {
                 punchProgress += 0.12;
                 p1.armR.rotation.x = -Math.sin(punchProgress * Math.PI) * 1.5;
-                p1.armR.rotation.z = -Math.sin(punchProgress * Math.PI) * 0.5;
-                if (punchProgress >= 1) {
-                    isPunching = false;
-                    p1.armR.rotation.set(0, 0, 0);
-                }
+                if (punchProgress >= 1) { isPunching = false; p1.armR.rotation.set(0, 0, 0); }
             }
 
-            // Vật lý Nhảy
             p1.group.position.y += velocityY;
             if (!isGrounded) {
                 velocityY += gravity;
-                if (p1.group.position.y <= 0) {
-                    p1.group.position.y = 0; velocityY = 0; isGrounded = true;
-                }
+                if (p1.group.position.y <= 0) { p1.group.position.y = 0; velocityY = 0; isGrounded = true; }
             }
 
-            // Player di chuyển theo Joystick
-            const moveMagnitude = Math.hypot(joyVector.x, joyVector.y);
-            const isMoving = moveMagnitude > 0.1;
+            const moveMag = Math.hypot(joyVector.x, joyVector.y);
+            if (moveMag > 0.1) {
+                const curSpeed = (isSprinting ? playerStats.sprintSpeed : playerStats.speed) * moveMag;
+                const angle = Math.atan2(joyVector.x, joyVector.y) + camYaw;
+                p1.group.position.x += Math.sin(angle) * curSpeed;
+                p1.group.position.z += Math.cos(angle) * curSpeed;
+                p1.group.rotation.y = angle;
 
-            if (isMoving) {
-                const speed = (isSprinting ? 0.3 : 0.15) * moveMagnitude;
-                const moveAngle = Math.atan2(joyVector.x, joyVector.y) + camYaw;
-
-                p1.group.position.x += Math.sin(moveAngle) * speed;
-                p1.group.position.z += Math.cos(moveAngle) * speed;
-                p1.group.rotation.y = moveAngle;
-
-                const animSpeed = isSprinting ? 18 : 10;
-                p1.armL.rotation.x = Math.sin(time * animSpeed) * 0.7;
-                if (!isPunching) p1.armR.rotation.x = -Math.sin(time * animSpeed) * 0.7;
-                p1.legL.rotation.x = -Math.sin(time * animSpeed) * 0.7;
-                p1.legR.rotation.x = Math.sin(time * animSpeed) * 0.7;
-            } else if (!isPunching) {
-                p1.armL.rotation.x = 0; p1.armR.rotation.x = 0;
-                p1.legL.rotation.x = 0; p1.legR.rotation.x = 0;
+                const animSpd = isSprinting ? 18 : 10;
+                p1.armL.rotation.x = Math.sin(time * animSpd) * 0.7;
+                if (!isPunching) p1.armR.rotation.x = -Math.sin(time * animSpd) * 0.7;
+                p1.legL.rotation.x = -Math.sin(time * animSpd) * 0.7;
+                p1.legR.rotation.x = Math.sin(time * animSpd) * 0.7;
             }
 
-            // NPC tự động di chuyển vô định
             npcs.forEach(npc => {
                 if (npc.isDead) return;
-
                 if (time > npc.changeDirTime) {
-                    const angle = Math.random() * Math.PI * 2;
-                    npc.targetDir.set(Math.cos(angle), 0, Math.sin(angle));
+                    const a = Math.random() * Math.PI * 2;
+                    npc.targetDir.set(Math.cos(a), 0, Math.sin(a));
                     npc.changeDirTime = time + 2 + Math.random() * 3;
                 }
-
                 npc.group.position.addScaledVector(npc.targetDir, 0.04);
                 npc.group.rotation.y = Math.atan2(npc.targetDir.x, npc.targetDir.z);
-
-                // Giới hạn NPC trong map
-                npc.group.position.x = Math.max(-50, Math.min(50, npc.group.position.x));
-                npc.group.position.z = Math.max(-50, Math.min(50, npc.group.position.z));
-
-                // Dáng đi NPC
-                npc.armL.rotation.x = Math.sin(time * 6) * 0.4;
-                npc.armR.rotation.x = -Math.sin(time * 6) * 0.4;
-                npc.legL.rotation.x = -Math.sin(time * 6) * 0.4;
-                npc.legR.rotation.x = Math.sin(time * 6) * 0.4;
             });
 
-            // Camera theo sau Player
             const targetY = p1.group.position.y + 2;
             camera.position.x = p1.group.position.x + camDistance * Math.sin(camYaw) * Math.cos(camPitch);
             camera.position.y = targetY + camDistance * Math.sin(camPitch);
