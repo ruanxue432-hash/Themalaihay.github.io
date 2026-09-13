@@ -3,132 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tải Free Fire & Chuyển Kênh TikTok Random</title>
+    <title>Roblox Ultimate Asset & ID Finder</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: #0d0d0d;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: #fff;
-            text-align: center;
-            padding: 20px;
-        }
-        .card {
-            background: #1a1a1c;
-            padding: 30px;
-            border-radius: 24px;
-            max-width: 420px;
-            width: 100%;
-            border: 2px solid #ff4757;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-        }
-        h1 {
-            font-size: 22px;
-            color: #ddd;
-            margin-bottom: 18px;
-            font-weight: 700;
-        }
-        .section {
-            margin-bottom: 22px;
-        }
-        .btn-ff {
-            display: block;
-            padding: 14px 18px;
-            font-size: 20px;
-            font-weight: 700;
-            background: #e84118;
-            color: #fff;
-            border: none;
-            border-radius: 60px;
-            text-decoration: none;
-            cursor: pointer;
-            box-shadow: 0 0 30px rgba(232, 65, 24, 0.5);
-            transition: 0.25s;
-            margin: 0 auto;
-            width: 100%;
-            text-align: center;
-        }
-        .btn-ff:hover {
-            background: #c73018;
-            transform: scale(1.03);
-            box-shadow: 0 0 40px rgba(232, 65, 24, 0.7);
-        }
-        .note {
-            color: #aaa;
-            font-size: 13px;
-            margin-top: 14px;
-            border-top: 1px solid #2a2a2e;
-            padding-top: 12px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121212; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #00a2ff; text-align: center; margin-bottom: 20px; font-size: 28px; }
+        
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #2a2a2a; }
+        input, select { padding: 12px; border-radius: 6px; border: 1px solid #333; background: #252525; color: #fff; font-size: 15px; outline: none; }
+        input[type="text"] { flex: 2; min-width: 200px; }
+        select { flex: 1; min-width: 140px; cursor: pointer; }
+        button { padding: 12px 20px; background: #00a2ff; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0082cc; }
 
-        /* TikTok section styles */
-        .tiktok-title {
-            font-size: 18px;
-            margin-bottom: 12px;
-            color: #fff;
-        }
-        .btn-tiktok {
-            width: 100%;
-            padding: 12px 14px;
-            background: linear-gradient(45deg, #ff0050, #00f2fe);
-            color: #fff;
-            border: none;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-tiktok:hover { opacity: 0.95; transform: scale(1.02); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { background: #252525; color: #aaa; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+        .tab-btn.active { background: #00a2ff; color: #fff; font-weight: bold; }
 
-        @media (max-width: 480px) {
-            .card { padding: 20px; }
-            h1 { font-size: 20px; }
-        }
+        .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .card { background: #1e1e1e; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #2a2a2a; position: relative; display: flex; flex-direction: column; justify: space-between; }
+        .card img { width: 100%; height: 140px; border-radius: 6px; object-fit: contain; background: #151515; }
+        .card h4 { font-size: 14px; margin: 10px 0 5px 0; height: 36px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        
+        .fav-btn { position: absolute; top: 18px; right: 18px; background: rgba(0,0,0,0.6); border: none; color: #ff4757; font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 50%; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+        .id-badge { background: #2a2a2a; color: #00ff88; padding: 6px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .id-badge:hover { background: #00ff88; color: #000; }
+        .script-btn { background: #333; color: #ffb703; padding: 6px; border-radius: 4px; font-size: 12px; cursor: pointer; border: none; font-weight: bold; }
+        .script-btn:hover { background: #ffb703; color: #000; }
+
+        audio { width: 100%; margin-top: 8px; height: 30px; }
+        .loading { text-align: center; color: #888; margin: 20px 0; display: none; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="section">
-            <h1>🎯 TẢI GAME</h1>
-            <a href="https://www.mediafire.com/file/71lw0gfap3gqp52/FreeFire%20_Global.apk/file" target="_blank" class="btn-ff" rel="noopener noreferrer">
-                🔥 Free Fire goba ob54
-            </a>
-            <div class="note">⚡ Bấm vào nút để tải APK</div>
-        </div>
 
-        <div class="section">
-            <div class="tiktok-title">MỞ KÊNH TIKTOK NGẪU NHIÊN</div>
-            <button class="btn-tiktok" onclick="openRandomTikTok()">BẤM ĐỂ MỞ TIKTOK & FOLLOW</button>
-            <div class="note" style="margin-top:12px;">⚡ Mở một profile TikTok ngẫu nhiên từ danh sách (có thể chỉnh sửa trong mã)</div>
-        </div>
+<div class="container">
+    <h1>🚀 Roblox Ultimate Asset Finder</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tabCatalog" onclick="switchTab('catalog')">🔍 Catalog Items</button>
+        <button class="tab-btn" id="tabFav" onclick="switchTab('favorites')">❤️ Yêu thích (<span id="favCount">0</span>)</button>
     </div>
 
-    <script>
-        // Danh sách các username TikTok (Bạn có thể thay hoặc thêm nick khác vào đây)
-        const tiktokProfiles = [
-            "tiktok",          // Kênh chính chủ TikTok
-            "sontungmtp",      // Sơn Tùng M-TP
-            "khaby.lame",      // Khaby Lame
-            "charlidamelio"    // Charli D'Amelio
-        ];
+    <div class="controls" id="searchControls">
+        <input type="text" id="searchInput" placeholder="Nhập từ khóa (Valkyrie, Dominus...)" onkeypress="if(event.key==='Enter') searchItems()">
+        
+        <!-- Bộ lọc Category -->
+        <select id="categorySelect">
+            <option value="All">Tất cả loại</option>
 
-        function openRandomTikTok() {
-            const randomIndex = Math.floor(Math.random() * tiktokProfiles.length);
-            const username = tiktokProfiles[randomIndex];
-            const url = `https://www.tiktok.com/@${username}`;
-            // Mở tab mới
-            window.open(url, '_blank');
+            <option value="Accessories">Phụ kiện (Hat/Face...)</option>
+            <option value="Clothing">Quần áo</option>
+            <option value="Audio">Âm thanh / Nhạc</option>
+        </select>
+
+        <button onclick="searchItems()">Tìm kiếm</button>
+    </div>
+
+    <div class="loading" id="loading">Đang kết nối API Roblox...</div>
+    <div class="results" id="results"></div>
+</div>
+
+<script>
+let favorites = JSON.parse(localStorage.getItem('rbx_favs')) || [];
+let currentTab = 'catalog';
+
+updateFavCount();
+
+function updateFavCount() {
+    document.getElementById('favCount').innerText = favorites.length;
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabCatalog').classList.toggle('active', tab === 'catalog');
+    document.getElementById('tabFav').classList.toggle('active', tab === 'favorites');
+    document.getElementById('searchControls').style.display = tab === 'catalog' ? 'flex' : 'none';
+
+    if (tab === 'favorites') {
+        renderFavorites();
+    } else {
+        document.getElementById('results').innerHTML = '';
+    }
+}
+
+async function searchItems() {
+    const query = document.getElementById('searchInput').value.trim();
+    const category = document.getElementById('categorySelect').value;
+    const resultsContainer = document.getElementById('results');
+    const loading = document.getElementById('loading');
+
+    if (!query) return;
+
+    resultsContainer.innerHTML = '';
+    loading.style.display = 'block';
+
+    try {
+        let categoryParam = category !== 'All' ? `&Category=${category}` : '';
+        const robloxApi = `https://catalog.roblox.com/v1/search/items/details?Keyword=${encodeURIComponent(query)}${categoryParam}&Limit=20`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(robloxApi)}`;
+
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+
+        loading.style.display = 'none';
+
+        if (!data.data || data.data.length === 0) {
+            resultsContainer.innerHTML = '<p style="grid-column: 1/-1; color: #ff4444; text-align: center;">Không tìm thấy kết quả nào!</p>';
+            return;
         }
-    </script>
+
+        renderItems(data.data);
+
+    } catch (error) {
+        loading.style.display = 'none';
+        resultsContainer.innerHTML = '<p style="grid-column: 1/-1; color: #ff4444; text-align: center;">Lỗi tải dữ liệu!</p>';
+    }
+}
+
+function renderItems(items) {
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = '';
+
+    items.forEach(item => {
+        const isFav = favorites.some(f => f.id === item.id);
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const imgUrl = `https://rbximages.xyz/?id=${item.id}&type=asset`;
+        const isAudio = item.assetType === 3 || item.type === 'Audio';
+
+        card.innerHTML = `
+            <button class="fav-btn" onclick="toggleFav(${item.id}, '${escapeHtml(item.name)}')">${isFav ? '❤️' : '🤍'}</button>
+            <img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/140?text=Roblox+Asset'" alt="${item.name}">
+            <h4>${item.name}</h4>
+            
+            ${isAudio ? `<audio controls src="https://assetdelivery.roblox.com/v1/asset?id=${item.id}"></audio>` : ''}
+
+            <div class="btn-group">
+                <div class="id-badge" onclick="copyText('${item.id}', this)">ID: ${item.id} 📋</div>
+                <button class="script-btn" onclick="copyScript('${item.id}', this)">⚡ Copy Code Luau</button>
+            </div>
+        `;
+        resultsContainer.appendChild(card);
+    });
+}
+
+function toggleFav(id, name) {
+    const index = favorites.findIndex(f => f.id === id);
+    if (index > -1) {
+        favorites.splice(index, 1);
+    } else {
+        favorites.push({ id, name });
+    }
+    localStorage.setItem('rbx_favs', JSON.stringify(favorites));
+    updateFavCount();
+
+    if (currentTab === 'favorites') {
+        renderFavorites();
+    } else {
+        searchItems();
+    }
+}
+
+function renderFavorites() {
+    if (favorites.length === 0) {
+        document.getElementById('results').innerHTML = '<p style="grid-column: 1/-1; color: #888; text-align: center;">Chưa có món nào trong mục Yêu thích!</p>';
+        return;
+    }
+    renderItems(favorites);
+}
+
+function copyText(text, element) {
+    navigator.clipboard.writeText(text);
+    const old = element.innerText;
+    element.innerText = 'Đã chép ID! ✓';
+    setTimeout(() => element.innerText = old, 1200);
+}
+
+function copyScript(id, element) {
+    const script = `game:GetService("InsertService"):LoadAsset(${id}).Parent = workspace`;
+    navigator.clipboard.writeText(script);
+    const old = element.innerText;
+    element.innerText = 'Đã chép Script! ✓';
+    setTimeout(() => element.innerText = old, 1200);
+}
+
+function escapeHtml(text) {
+    return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+</script>
+
 </body>
 </html>
