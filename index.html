@@ -2,139 +2,226 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox 3D Avatar Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Roblox 3D - 2 Nhân Vật & Nút Di Chuyển</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: Arial, sans-serif; }
-        #ui { position: absolute; top: 20px; left: 20px; color: #fff; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; pointer-events: none; border: 1px solid #334155; }
-        h1 { font-size: 18px; color: #38bdf8; margin-bottom: 5px; }
-        p { font-size: 13px; color: #94a3b8; }
+        
+        /* Giao diện nút D-Pad di chuyển */
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 150px;
+            height: 150px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            z-index: 10;
+        }
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+        .btn:active { background: #38bdf8; color: #000; }
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 3; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <h1>Mô Phỏng Nhân Vật Roblox 3D</h1>
-        <p>• Kéo chuột trái: Xoay góc nhìn</p>
-        <p>• Cuộn chuột: Phóng to / Thu nhỏ</p>
-        <p>• Kéo chuột phải: Di chuyển Camera</p>
+    <div id="info">🎮 Dùng nút trên màn hình hoặc phím W-A-S-D / Mũi tên để di chuyển nhân vật Xanh!</div>
+
+    <!-- D-Pad Controls -->
+    <div id="controls">
+        <div class="btn" id="btn-up">▲</div>
+        <div class="btn" id="btn-left">◀</div>
+        <div class="btn" id="btn-down">▼</div>
+        <div class="btn" id="btn-right">▶</div>
     </div>
 
-    <!-- Nhúng Three.js và OrbitControls từ CDN -->
+    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
-        // 1. Khởi tạo Scene, Camera, Renderer
+        // 1. Scene, Camera, Renderer
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0f172a);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 3, 8);
+        camera.position.set(0, 8, 12);
+        camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // 2. Thêm Điều khiển chuột (OrbitControls)
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.target.set(0, 1.5, 0);
-
-        // 3. Ánh sáng (Lighting)
+        // Ánh sáng
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 10, 7);
+        dirLight.position.set(5, 12, 8);
         dirLight.castShadow = true;
         scene.add(dirLight);
 
-        // 4. Mặt đất (Sàn Roblox)
-        const gridHelper = new THREE.GridHelper(20, 20, 0x38bdf8, 0x334155);
+        // Sàn đấu (Grid)
+        const gridHelper = new THREE.GridHelper(30, 30, 0x38bdf8, 0x334155);
         scene.add(gridHelper);
 
-        // 5. DỰNG NHÂN VẬT ROBLOX (BLOCKY AVATAR)
-        const robloxCharacter = new THREE.Group();
+        // 2. Hàm tạo nhân vật Roblox
+        function createRobloxCharacter(colorHex) {
+            const charGroup = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: colorHex });
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 }); // Đầu vàng
 
-        // Material màu sắc cơ bản
-        const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 }); // Vàng Roblox
-        const torsoMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 }); // Áo xanh dương
-        const limbMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });  // Tay xanh dương
-        const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });   // Quần đen/xám
+            // Torso
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat);
+            torso.position.y = 2.5;
+            torso.castShadow = true;
+            charGroup.add(torso);
 
-        // Thân (Torso)
-        const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat);
-        torso.position.y = 2.5;
-        torso.castShadow = true;
-        robloxCharacter.add(torso);
+            // Head
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat);
+            head.position.y = 4.2;
+            head.castShadow = true;
+            charGroup.add(head);
 
-        // Đầu (Head)
-        const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat);
-        head.position.y = 4.2;
-        head.castShadow = true;
-        robloxCharacter.add(head);
+            // Arms
+            const armL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
+            armL.position.set(-1.4, 2.5, 0);
+            charGroup.add(armL);
 
-        // Mắt/Miệng đơn giản trên mặt Roblox
-        const faceMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        const eyeLeft = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.05), faceMat);
-        eyeLeft.position.set(-0.3, 4.3, 0.61);
-        robloxCharacter.add(eyeLeft);
+            const armR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat);
+            armR.position.set(1.4, 2.5, 0);
+            charGroup.add(armR);
 
-        const eyeRight = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.05), faceMat);
-        eyeRight.position.set(0.3, 4.3, 0.61);
-        robloxCharacter.add(eyeRight);
+            // Legs
+            const legL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
+            legL.position.set(-0.5, 0.5, 0);
+            charGroup.add(legL);
 
-        // Tay trái (Left Arm)
-        const armLeft = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), limbMat);
-        armLeft.position.set(-1.5, 2.5, 0);
-        armLeft.castShadow = true;
-        robloxCharacter.add(armLeft);
+            const legR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat);
+            legR.position.set(0.5, 0.5, 0);
+            charGroup.add(legR);
 
-        // Tay phải (Right Arm)
-        const armRight = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), limbMat);
-        armRight.position.set(1.5, 2.5, 0);
-        armRight.castShadow = true;
-        robloxCharacter.add(armRight);
+            return { group: charGroup, armL, armR, legL, legR };
+        }
 
-        // Chân trái (Left Leg)
-        const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.95, 2, 0.95), legMat);
-        legLeft.position.set(-0.5, 0.5, 0);
-        legLeft.castShadow = true;
-        robloxCharacter.add(legLeft);
+        // Tạo 2 nhân vật
+        const p1 = createRobloxCharacter(0x0284c7); // Player (Xanh)
+        p1.group.position.set(-2, 0, 0);
+        scene.add(p1.group);
 
-        // Chân phải (Right Leg)
-        const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.95, 2, 0.95), legMat);
-        legRight.position.set(0.5, 0.5, 0);
-        legRight.castShadow = true;
-        robloxCharacter.add(legRight);
+        const p2 = createRobloxCharacter(0xef4444); // NPC (Đỏ)
+        p2.group.position.set(3, 0, -2);
+        scene.add(p2.group);
 
-        scene.add(robloxCharacter);
+        // 3. Xử lý Di Chuyển
+        const keys = { forward: false, backward: false, left: false, right: false };
+        const speed = 0.15;
 
-        // 6. Animation (Hiệu ứng nhún nhảy + xoay)
-        let clock = new THREE.Clock();
+        // Bắt sự kiện bàn phím (W-A-S-D & Mũi tên)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = true;
+            if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = true;
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.forward = false;
+            if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.backward = false;
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+        });
+
+        // Bắt sự kiện Nút trên màn hình (Hỗ trợ cả Cảm ứng & Chuột)
+        function setupBtn(id, key) {
+            const btn = document.getElementById(id);
+            const start = () => keys[key] = true;
+            const end = () => keys[key] = false;
+
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); start(); });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); end(); });
+        }
+
+        setupBtn('btn-up', 'forward');
+        setupBtn('btn-down', 'backward');
+        setupBtn('btn-left', 'left');
+        setupBtn('btn-right', 'right');
+
+        // 4. Game Loop (Cập nhật vị trí & Animation)
+        const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
 
-            const elapsedTime = clock.getElapsedTime();
+            const time = clock.getElapsedTime();
+            let isMoving = false;
 
-            // Nhún nhảy nhẹ lên xuống
-            robloxCharacter.position.y = Math.sin(elapsedTime * 3) * 0.1;
+            // Xử lý di chuyển cho Player (P1)
+            if (keys.forward) { p1.group.position.z -= speed; p1.group.rotation.y = Math.PI; isMoving = true; }
+            if (keys.backward) { p1.group.position.z += speed; p1.group.rotation.y = 0; isMoving = true; }
+            if (keys.left) { p1.group.position.x -= speed; p1.group.rotation.y = -Math.PI / 2; isMoving = true; }
+            if (keys.right) { p1.group.position.x += speed; p1.group.rotation.y = Math.PI / 2; isMoving = true; }
 
-            // Đung đưa 2 tay kiểu Idle animation
-            armLeft.rotation.x = Math.sin(elapsedTime * 2) * 0.2;
-            armRight.rotation.x = -Math.sin(elapsedTime * 2) * 0.2;
+            // Animation di chuyển (Đung đưa tay chân)
+            if (isMoving) {
+                p1.armL.rotation.x = Math.sin(time * 12) * 0.6;
+                p1.armR.rotation.x = -Math.sin(time * 12) * 0.6;
+                p1.legL.rotation.x = -Math.sin(time * 12) * 0.6;
+                p1.legR.rotation.x = Math.sin(time * 12) * 0.6;
+            } else {
+                p1.armL.rotation.x = 0;
+                p1.armR.rotation.x = 0;
+                p1.legL.rotation.x = 0;
+                p1.legR.rotation.x = 0;
+            }
 
-            controls.update();
+            // Animation đứng nhún nhảy cho NPC (P2)
+            p2.group.position.y = Math.sin(time * 3) * 0.08;
+            p2.armL.rotation.x = Math.sin(time * 2) * 0.2;
+            p2.armR.rotation.x = -Math.sin(time * 2) * 0.2;
+
+            // Camera đi theo Player
+            camera.position.x = p1.group.position.x;
+            camera.position.z = p1.group.position.z + 12;
+            camera.lookAt(p1.group.position.x, 2, p1.group.position.z);
+
             renderer.render(scene, camera);
         }
 
         animate();
 
-        // Resize màn hình tự co giãn
+        // Tự căn chỉnh khi đổi kích thước màn hình
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
