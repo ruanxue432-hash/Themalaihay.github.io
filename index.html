@@ -3,43 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML/JS CODE RUNNER</title>
+    <title>HTML/JS CODE RUNNER PRO</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
         body { background: #0e1017; color: #fff; padding: 10px; display: flex; flex-direction: column; height: 100vh; gap: 10px; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; }
-        h3 { color: #00ff66; font-size: 14px; }
+        .header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        h3 { color: #00ff66; font-size: 14px; white-space: nowrap; }
+        
+        .btn-group { display: flex; gap: 8px; }
         
         button {
-            background: #00ff66; color: #000; border: none; padding: 8px 16px;
-            font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;
+            background: #00ff66; color: #000; border: none; padding: 8px 14px;
+            font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 12px;
         }
         button:hover { opacity: 0.8; }
+        .btn-fullscreen { background: #00bcd4; color: #fff; }
 
-        .editor-container { display: flex; flex: 1; gap: 10px; height: calc(100% - 50px); }
-        @media (max-width: 600px) { .editor-container { flex-direction: column; } }
+        /* Bố cục mặc định (Màn hình dọc) */
+        .editor-container { display: flex; flex-direction: column; flex: 1; gap: 10px; height: calc(100% - 50px); }
 
         textarea {
             flex: 1; background: #161922; color: #00ff66; border: 1px solid #2a2e3d;
             padding: 10px; border-radius: 6px; outline: none; resize: none; font-size: 12px;
         }
 
+        .preview-wrapper { flex: 1; position: relative; width: 100%; height: 100%; }
+
         iframe {
-            flex: 1; background: #fff; border: 1px solid #2a2e3d; border-radius: 6px; width: 100%; height: 100%;
+            background: #fff; border: 1px solid #2a2e3d; border-radius: 6px; width: 100%; height: 100%;
         }
+
+        /* Tối ưu khi Xoay màn hình ngang hoặc trên Máy tính */
+        @media (orientation: landscape) or (min-width: 768px) {
+            .editor-container { flex-direction: row; }
+        }
+
+        /* Chế độ Phóng to toàn màn hình */
+        .preview-wrapper.fullscreen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; padding: 0;
+        }
+        .preview-wrapper.fullscreen iframe { border-radius: 0; border: none; }
+        .preview-wrapper .btn-exit-fs {
+            display: none; position: absolute; top: 10px; right: 10px; z-index: 10000;
+            background: rgba(255, 0, 0, 0.8); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;
+        }
+        .preview-wrapper.fullscreen .btn-exit-fs { display: block; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h3>MÔ PHỎNG WEB TĨNH (HTML/CSS/JS)</h3>
-        <button onclick="runCode()">BẮT ĐẦU CHẠY</button>
+        <h3>WEB TĨNH RUNNER</h3>
+        <div class="btn-group">
+            <button onclick="runCode()">BẤM CHẠY</button>
+            <button class="btn-fullscreen" onclick="toggleFullscreen()">PHÓNG TO</button>
+        </div>
     </div>
 
     <div class="editor-container">
         <textarea id="codeArea" placeholder="Dán code HTML/CSS/JS vào đây..."></textarea>
-        <iframe id="preview"></iframe>
+        <div class="preview-wrapper" id="previewWrapper">
+            <button class="btn-exit-fs" onclick="toggleFullscreen()">THU NHỎ ✖</button>
+            <iframe id="preview"></iframe>
+        </div>
     </div>
 
     <script>
@@ -50,6 +77,11 @@
             preview.open();
             preview.write(code);
             preview.close();
+        }
+
+        function toggleFullscreen() {
+            const wrapper = document.getElementById('previewWrapper');
+            wrapper.classList.toggle('fullscreen');
         }
     </script>
 
