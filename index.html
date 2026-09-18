@@ -2,462 +2,56 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Roblox City Beach - Delta X Executor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML/JS CODE RUNNER</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #87ceeb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
+        body { background: #0e1017; color: #fff; padding: 10px; display: flex; flex-direction: column; height: 100vh; gap: 10px; }
         
-        /* Icon Toggle Delta X */
-        #delta-btn-toggle {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #1e1b4b, #4338ca);
-            border: 2px solid #818cf8;
-            border-radius: 12px;
-            color: #fff;
-            font-weight: 900;
-            font-size: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        h3 { color: #00ff66; font-size: 14px; }
+        
+        button {
+            background: #00ff66; color: #000; border: none; padding: 8px 16px;
+            font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+
+        .editor-container { display: flex; flex: 1; gap: 10px; height: calc(100% - 50px); }
+        @media (max-width: 600px) { .editor-container { flex-direction: column; } }
+
+        textarea {
+            flex: 1; background: #161922; color: #00ff66; border: 1px solid #2a2e3d;
+            padding: 10px; border-radius: 6px; outline: none; resize: none; font-size: 12px;
         }
 
-        /* UI Menu Delta X */
-        #delta-executor {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 480px;
-            background: rgba(15, 23, 42, 0.92);
-            border: 2px solid #6366f1;
-            border-radius: 16px;
-            padding: 16px;
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 99;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        }
-        #delta-executor.active { display: flex; }
-
-        .delta-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #fff;
-            font-weight: bold;
-            font-size: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 8px;
-        }
-        .delta-header span { color: #818cf8; font-size: 13px; }
-
-        #delta-code-input {
-            width: 100%;
-            height: 140px;
-            background: #090d16;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            color: #4ade80;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
-            padding: 10px;
-            resize: none;
-            outline: none;
-            user-select: text;
-        }
-
-        .delta-controls { display: flex; gap: 8px; }
-        .delta-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 12px;
-            cursor: pointer;
-            color: white;
-            transition: 0.2s;
-        }
-        #btn-exec { background: #22c55e; }
-        #btn-clear { background: #ef4444; }
-        #btn-preset { background: #8b5cf6; }
-
-        /* Controls Game Normal UI */
-        #joystick-zone {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            backdrop-filter: blur(4px);
-        }
-        #joystick-stick {
-            width: 50px;
-            height: 50px;
-            background: #38bdf8;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
-            transform: translate(0px, 0px);
-        }
-        #action-buttons {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 12px;
-            z-index: 10;
-        }
-        .action-btn {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-        }
-        #btn-jump { background: rgba(34, 197, 94, 0.5); }
-        #btn-sprint { background: rgba(234, 179, 8, 0.5); }
-        #btn-sprint.active { background: #eab308; color: #000; }
-        #btn-punch { background: rgba(239, 68, 68, 0.6); border-color: #f87171; }
-
-        #info {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            color: #fff;
-            background: rgba(0,0,0,0.6);
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            pointer-events: none;
-            z-index: 10;
+        iframe {
+            flex: 1; background: #fff; border: 1px solid #2a2e3d; border-radius: 6px; width: 100%; height: 100%;
         }
     </style>
 </head>
 <body>
 
-    <div id="info">
-        🕹️ <b>Cần Kéo:</b> Di chuyển | 🔄 <b>Vuốt Phải:</b> Xoay camera<br>
-        🦘 <b>JUMP</b> | ⚡ <b>SPRINT</b> | 🔥 <b>PUNCH</b> | ⚡ <b>Delta X (Top Right)</b>
+    <div class="header">
+        <h3>MÔ PHỎNG WEB TĨNH (HTML/CSS/JS)</h3>
+        <button onclick="runCode()">BẮT ĐẦU CHẠY</button>
     </div>
 
-    <!-- Toggle Button Delta X -->
-    <div id="delta-btn-toggle">Δ</div>
-
-    <!-- Executor Window -->
-    <div id="delta-executor">
-        <div class="delta-header">
-            <div>DELTA X <span>v2.6 Executor</span></div>
-            <div style="cursor:pointer;" id="delta-close">✖</div>
-        </div>
-        <textarea id="delta-code-input" placeholder="// Nhập script JS/Roblox tại đây...&#10;// Ví dụ: player.speed = 0.8;&#10;// player.jumpPower = 0.8;&#10;// killAllNPCs();"></textarea>
-        <div class="delta-controls">
-            <button class="delta-btn" id="btn-exec">EXECUTE</button>
-            <button class="delta-btn" id="btn-preset">SCRIPT MẪU</button>
-            <button class="delta-btn" id="btn-clear">CLEAR</button>
-        </div>
+    <div class="editor-container">
+        <textarea id="codeArea" placeholder="Dán code HTML/CSS/JS vào đây..."></textarea>
+        <iframe id="preview"></iframe>
     </div>
-
-    <div id="joystick-zone">
-        <div id="joystick-stick"></div>
-    </div>
-
-    <div id="action-buttons">
-        <div class="action-btn" id="btn-punch">🔥 PUNCH</div>
-        <div class="action-btn" id="btn-sprint">⚡ SPRINT</div>
-        <div class="action-btn" id="btn-jump">▲ JUMP</div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // 1. Scene Setup
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x7dd3fc);
-        scene.fog = new THREE.FogExp2(0x7dd3fc, 0.008);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
-
-        const sunLight = new THREE.DirectionalLight(0xfffaed, 0.9);
-        sunLight.position.set(40, 60, 20);
-        sunLight.castShadow = true;
-        scene.add(sunLight);
-
-        // Map
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        const sea = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1 }));
-        sea.rotation.x = -Math.PI / 2;
-        sea.position.set(0, -0.2, 110);
-        scene.add(sea);
-
-        for (let i = -50; i <= 50; i += 20) {
-            const h = 15 + Math.random() * 25;
-            const b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff }));
-            b.position.set(i, h / 2, -40);
-            b.castShadow = true;
-            b.receiveShadow = true;
-            scene.add(b);
+        function runCode() {
+            const code = document.getElementById('codeArea').value;
+            const preview = document.getElementById('preview').contentWindow.document;
+            
+            preview.open();
+            preview.write(code);
+            preview.close();
         }
-
-        // Healthbar & Roblox Character
-        function createHealthBarTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 128; canvas.height = 16;
-            const ctx = canvas.getContext('2d');
-            return { canvas, ctx, texture: new THREE.CanvasTexture(canvas) };
-        }
-
-        function updateHealthBar(hb, hp, maxHp) {
-            const { ctx, texture } = hb;
-            ctx.clearRect(0, 0, 128, 16);
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillRect(0, 0, 128, 16);
-            const pct = Math.max(0, hp / maxHp);
-            ctx.fillStyle = pct > 0.5 ? '#22c55e' : (pct > 0.25 ? '#eab308' : '#ef4444');
-            ctx.fillRect(2, 2, (128 - 4) * pct, 12);
-            texture.needsUpdate = true;
-        }
-
-        function createRobloxChar(colorHex, isNPC = false) {
-            const group = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({ color: colorHex });
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffcd38 });
-
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), mat); torso.position.y = 2.5; group.add(torso);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), headMat); head.position.y = 4.2; group.add(head);
-            const armL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat); armL.position.set(-1.4, 2.5, 0); group.add(armL);
-            const armR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2, 0.8), mat); armR.position.set(1.4, 2.5, 0); group.add(armR);
-            const legL = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat); legL.position.set(-0.5, 0.5, 0); group.add(legL);
-            const legR = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2, 0.9), mat); legR.position.set(0.5, 0.5, 0); group.add(legR);
-
-            let hbObj = null;
-            if (isNPC) {
-                const hb = createHealthBarTexture();
-                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: hb.texture }));
-                sprite.position.y = 5.5; sprite.scale.set(3, 0.4, 1); group.add(sprite);
-                hbObj = hb; updateHealthBar(hbObj, 100, 100);
-            }
-
-            return { group, armL, armR, legL, legR, hbObj, hp: 100, maxHp: 100, isDead: false, targetDir: new THREE.Vector3(), changeDirTime: 0 };
-        }
-
-        const playerStats = { speed: 0.15, sprintSpeed: 0.3, jumpPower: 0.35 };
-        const p1 = createRobloxChar(0x0284c7);
-        p1.group.position.set(0, 0, 10);
-        scene.add(p1.group);
-
-        const npcs = [];
-        for (let i = 0; i < 6; i++) {
-            const npc = createRobloxChar(Math.random() * 0xffffff, true);
-            npc.group.position.set((Math.random() - 0.5) * 60, 0, (Math.random() - 0.5) * 40);
-            scene.add(npc.group);
-            npcs.push(npc);
-        }
-
-        // Joystick & Cam
-        let camYaw = 0, camPitch = 0.3, camDistance = 14;
-        let isCamDragging = false, prevTouchX = 0, prevTouchY = 0;
-        const zone = document.getElementById('joystick-zone');
-        const stick = document.getElementById('joystick-stick');
-        let joyVector = { x: 0, y: 0 }, joyTouchId = null;
-        const maxRadius = 45;
-
-        function handleJoyMove(clientX, clientY) {
-            const rect = zone.getBoundingClientRect();
-            let dX = clientX - (rect.left + rect.width / 2);
-            let dY = clientY - (rect.top + rect.height / 2);
-            let dist = Math.hypot(dX, dY);
-            if (dist > maxRadius) { dX = (dX / dist) * maxRadius; dY = (dY / dist) * maxRadius; }
-            stick.style.transform = `translate(${dX}px, ${dY}px)`;
-            joyVector.x = dX / maxRadius; joyVector.y = dY / maxRadius;
-        }
-
-        function resetJoy() { stick.style.transform = `translate(0px, 0px)`; joyVector = { x: 0, y: 0 }; joyTouchId = null; }
-
-        window.addEventListener('touchstart', (e) => {
-            for (let touch of e.changedTouches) {
-                if (e.target.closest('#delta-executor') || e.target.closest('#delta-btn-toggle')) return;
-                const targetBtn = touch.target.closest('.action-btn');
-                const targetJoy = touch.target.closest('#joystick-zone');
-                if (targetJoy && joyTouchId === null) { joyTouchId = touch.identifier; handleJoyMove(touch.clientX, touch.clientY); }
-                else if (!targetBtn && !targetJoy) { isCamDragging = true; prevTouchX = touch.clientX; prevTouchY = touch.clientY; }
-            }
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === joyTouchId) handleJoyMove(touch.clientX, touch.clientY);
-                else if (isCamDragging) {
-                    camYaw -= (touch.clientX - prevTouchX) * 0.005;
-                    camPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPitch + (touch.clientY - prevTouchY) * 0.005));
-                    prevTouchX = touch.clientX; prevTouchY = touch.clientY;
-                }
-            }
-        });
-
-        window.addEventListener('touchend', (e) => {
-            for (let touch of e.changedTouches) { if (touch.identifier === joyTouchId) resetJoy(); }
-            if (e.touches.length === 0) isCamDragging = false;
-        });
-
-        // Jump, Sprint & Punch
-        let isSprinting = false, velocityY = 0, isGrounded = true, gravity = -0.015, isPunching = false, punchProgress = 0;
-        const btnJump = document.getElementById('btn-jump');
-        const btnSprint = document.getElementById('btn-sprint');
-        const btnPunch = document.getElementById('btn-punch');
-
-        function doJump() { if (isGrounded) { velocityY = playerStats.jumpPower; isGrounded = false; } }
-        function doPunch() {
-            if (isPunching) return; isPunching = true; punchProgress = 0;
-            npcs.forEach(npc => {
-                if (npc.isDead) return;
-                if (p1.group.position.distanceTo(npc.group.position) < 3.5) {
-                    npc.hp -= 25; updateHealthBar(npc.hbObj, npc.hp, npc.maxHp);
-                    const push = npc.group.position.clone().sub(p1.group.position).normalize();
-                    npc.group.position.addScaledVector(push, 1.2);
-                    if (npc.hp <= 0) { npc.isDead = true; npc.group.rotation.x = Math.PI / 2; npc.group.position.y = 0.5; }
-                }
-            });
-        }
-
-        btnJump.addEventListener('click', doJump);
-        btnPunch.addEventListener('click', doPunch);
-        btnSprint.addEventListener('touchstart', (e) => { e.preventDefault(); isSprinting = true; btnSprint.classList.add('active'); });
-        btnSprint.addEventListener('touchend', (e) => { e.preventDefault(); isSprinting = false; btnSprint.classList.remove('active'); });
-
-        // --- HỆ THỐNG EXECUTOR DELTA X ---
-        const toggleBtn = document.getElementById('delta-btn-toggle');
-        const executor = document.getElementById('delta-executor');
-        const closeBtn = document.getElementById('delta-close');
-        const codeInput = document.getElementById('delta-code-input');
-        const btnExec = document.getElementById('btn-exec');
-        const btnClear = document.getElementById('btn-clear');
-        const btnPreset = document.getElementById('btn-preset');
-
-        toggleBtn.addEventListener('click', () => executor.classList.toggle('active'));
-        closeBtn.addEventListener('click', () => executor.classList.remove('active'));
-        btnClear.addEventListener('click', () => codeInput.value = '');
-
-        // Các hàm hỗ trợ Script Executor
-        window.player = playerStats;
-        window.killAllNPCs = () => {
-            npcs.forEach(npc => {
-                npc.hp = 0; npc.isDead = true;
-                updateHealthBar(npc.hbObj, 0, 100);
-                npc.group.rotation.x = Math.PI / 2; npc.group.position.y = 0.5;
-            });
-        };
-        window.tpTo = (x, z) => p1.group.position.set(x, p1.group.position.y, z);
-
-        btnPreset.addEventListener('click', () => {
-            codeInput.value = `// Hack Speed + Jump High\nplayer.speed = 0.5;\nplayer.jumpPower = 0.7;\n\n// Kill All NPCs\n// killAllNPCs();`;
-        });
-
-        btnExec.addEventListener('click', () => {
-            try {
-                const scriptText = codeInput.value;
-                new Function(scriptText)();
-                alert("⚡ Executed Successfully!");
-            } catch (err) {
-                alert("❌ Script Error: " + err.message);
-            }
-        });
-
-        // Game Loop
-        const clock = new THREE.Clock();
-        function animate() {
-            requestAnimationFrame(animate);
-            const time = clock.getElapsedTime();
-
-            if (isPunching) {
-                punchProgress += 0.12;
-                p1.armR.rotation.x = -Math.sin(punchProgress * Math.PI) * 1.5;
-                if (punchProgress >= 1) { isPunching = false; p1.armR.rotation.set(0, 0, 0); }
-            }
-
-            p1.group.position.y += velocityY;
-            if (!isGrounded) {
-                velocityY += gravity;
-                if (p1.group.position.y <= 0) { p1.group.position.y = 0; velocityY = 0; isGrounded = true; }
-            }
-
-            const moveMag = Math.hypot(joyVector.x, joyVector.y);
-            if (moveMag > 0.1) {
-                const curSpeed = (isSprinting ? playerStats.sprintSpeed : playerStats.speed) * moveMag;
-                const angle = Math.atan2(joyVector.x, joyVector.y) + camYaw;
-                p1.group.position.x += Math.sin(angle) * curSpeed;
-                p1.group.position.z += Math.cos(angle) * curSpeed;
-                p1.group.rotation.y = angle;
-
-                const animSpd = isSprinting ? 18 : 10;
-                p1.armL.rotation.x = Math.sin(time * animSpd) * 0.7;
-                if (!isPunching) p1.armR.rotation.x = -Math.sin(time * animSpd) * 0.7;
-                p1.legL.rotation.x = -Math.sin(time * animSpd) * 0.7;
-                p1.legR.rotation.x = Math.sin(time * animSpd) * 0.7;
-            }
-
-            npcs.forEach(npc => {
-                if (npc.isDead) return;
-                if (time > npc.changeDirTime) {
-                    const a = Math.random() * Math.PI * 2;
-                    npc.targetDir.set(Math.cos(a), 0, Math.sin(a));
-                    npc.changeDirTime = time + 2 + Math.random() * 3;
-                }
-                npc.group.position.addScaledVector(npc.targetDir, 0.04);
-                npc.group.rotation.y = Math.atan2(npc.targetDir.x, npc.targetDir.z);
-            });
-
-            const targetY = p1.group.position.y + 2;
-            camera.position.x = p1.group.position.x + camDistance * Math.sin(camYaw) * Math.cos(camPitch);
-            camera.position.y = targetY + camDistance * Math.sin(camPitch);
-            camera.position.z = p1.group.position.z + camDistance * Math.cos(camYaw) * Math.cos(camPitch);
-            camera.lookAt(p1.group.position.x, targetY, p1.group.position.z);
-
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
     </script>
+
 </body>
 </html>
